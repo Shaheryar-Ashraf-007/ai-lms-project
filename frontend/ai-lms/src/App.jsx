@@ -2,10 +2,12 @@ import { Route, Routes } from "react-router-dom"
 import Signup from "./pages/Signup"
 import Login from "./pages/Login"
 import Home from "./pages/Home"
+import { ToastContainer } from "react-toastify"
 
 function App() {
   return (
     <>
+    <ToastContainer/>
 
     <Routes>
       <Route path="/" element={<Home />} />

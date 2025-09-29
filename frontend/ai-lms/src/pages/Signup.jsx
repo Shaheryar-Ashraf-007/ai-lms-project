@@ -1,27 +1,171 @@
-import image from "../assets/image.png"
-const Signup = () => {
-  return (
-    <div className='bg-[#F9F9F9]'>
-      <div className="flex items-center justify-center">
-        {/* Left part */}
-        <div className="p-4 w-1/2  bg-gray-200 h-[500px] mt-12 rounded-l-lg">
-        <h1 className=" text-center font-bold mt-8 text-2xl">Let's get Started</h1>
-        <p className="text-center text-gray-400">Create your account</p>
-        <div className="mt-8 font-bold text-xl ml-8">Name</div>
-          <input type="text" placeholder="Full Name" className="w-62 p-3 ml-8 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]" />
+import { Link, useNavigate } from "react-router-dom";
+import image from "../assets/image.png";
+import { useState } from "react";
+import { FiEyeOff } from "react-icons/fi";
+import { BsEye, BsGoogle } from "react-icons/bs";
+import axiosInstance from "../../lib/axiosInstance";
+import { toast } from "react-toastify";
+import { ClipLoader } from "react-spinners";
 
-          <div className="mt-8 font-bold text-xl ml-8 mr-8">Email</div>
-          <input type="text" placeholder="Email" className="w-56 p-3 ml-8 mr-8 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]" />
-          <div className="mt-8 font-bold text-xl ml-2">Password</div>
-          <input type="text" placeholder="**********" className="w-full p-3  rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]" />
+const Signup = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleSignup = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post("/auth/signup", {
+        name,
+        email,
+        password,
+        role,
+      });
+      console.log("Signup successful:", response.data);
+      setLoading(false);
+      navigate("/");
+      toast.success("Signup successful!");
+    } catch (error) {
+      console.error(
+        "Signup failed:",
+        error.response ? error.response.data : error.message
+      );
+      setLoading(false);
+      toast.error(
+        `Signup failed: ${
+          error.response ? error.response.data.message : error.message
+        }`
+      );
+    }
+  };
+
+  return (
+    <div className="bg-[#F9F9F9] min-h-screen py-8 px-4">
+      <form className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto" onSubmit={(e) => e.preventDefault()}>
+        {/* Left part */}
+        <div className="p-4 sm:p-6 md:p-8 w-full lg:w-1/2 bg-gray-200 rounded-lg lg:rounded-l-lg lg:rounded-r-none">
+          <h1 className="text-center font-bold mt-4 text-xl sm:text-2xl">
+            Let's get Started
+          </h1>
+          <p className="text-center text-gray-400 text-sm sm:text-base">
+            Create your account
+          </p>
+
+          {/* Name and Email in one row on larger screens */}
+          <div className="flex flex-col sm:flex-row justify-between mt-4 gap-4 sm:gap-2">
+            <div className="w-full sm:w-1/2">
+              <div className="font-bold text-lg sm:text-xl mb-1">Name</div>
+              <input
+                type="text"
+                placeholder="Full Name"
+                onChange={(e) => setName(e.target.value)}
+                value={name}
+                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+              />
+            </div>
+            <div className="w-full sm:w-1/2">
+              <div className="font-bold text-lg sm:text-xl mb-1">Email</div>
+              <input
+                type="email"
+                placeholder="Email"
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 font-bold text-lg sm:text-xl mb-1">Password</div>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="**********"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute right-3 top-1/2 cursor-pointer -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {showPassword ? <FiEyeOff size={20} /> : <BsEye size={20} />}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center mt-6 gap-4">
+            <button
+              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${
+                role === "student" ? "bg-[#FBB03B] text-white" : ""
+              } rounded-lg`}
+              onClick={() => setRole("student")}
+            >
+              Student
+            </button>
+            <button
+              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${
+                role === "educator" ? "bg-[#FBB03B] text-white" : ""
+              } rounded-lg`}
+              onClick={() => setRole("educator")}
+            >
+              Educator
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center mt-6">
+            <button
+              className="w-full sm:w-auto px-8 bg-[#FBB03B] py-2 rounded-lg text-white cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B]"
+              disabled={loading}
+              onClick={handleSignup}
+            >
+              {loading ? <ClipLoader size={30} color="white" /> : "Sign Up"}
+            </button>
+          </div>
+
+          <div className="text-gray-400 text-center mt-6 text-xs sm:text-sm flex items-center gap-2">
+            <span className="flex-1 border-t border-gray-300"></span>
+            <span>Or Continue With</span>
+            <span className="flex-1 border-t border-gray-300"></span>
+          </div>
+
+          <div className="flex items-center justify-center mt-4">
+            <button className="w-full sm:w-auto px-8 border border-[#FBB03B] py-2 rounded-lg hover:text-white cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B]">
+              <BsGoogle className="inline-block mr-2" /> Sign Up with Google
+            </button>
+          </div>
+
+          <div className="text-gray-400 text-center mt-4 text-sm">
+            Already have an account?
+            <Link
+              to="/login"
+              className="text-[#FBB03B] font-bold hover:underline"
+            >
+              {" "}
+              Log In
+            </Link>
+          </div>
         </div>
-        {/* Image */}
-        <div className="bg-[#2B3B6D] flex items-center justify-center border rounded-r-lg border-[#2B3B6D] mt-12 w-1/3 h-[500px]">
-          <img src={image} alt="logo" className=' w-96 h-96 m-4' />
+
+        {/* Image - Hidden on mobile, visible on large screens */}
+        <div className="hidden lg:flex bg-[#2B3B6D] items-center justify-center rounded-r-lg w-1/3 min-h-[600px]">
+          <img
+            src={image}
+            alt="logo"
+            className="w-64 xl:w-96 h-64 xl:h-96 object-contain"
+          />
         </div>
-      </div>
+      </form>
     </div>
   );
-}
+};
 
 export default Signup;
