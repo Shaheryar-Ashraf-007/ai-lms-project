@@ -1,15 +1,48 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import image from "../assets/image.png";
 import { useState } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { BsEye, BsGoogle } from "react-icons/bs";
+import axiosInstance from "../../lib/axiosInstance";
+import { toast } from "react-toastify";
+import { ClipLoader } from "react-spinners";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // New state for login status
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post("/auth/login", {
+        email,
+        password,
+      });
+      console.log("Login successful:", response.data);
+      setLoading(false);
+      setIsLoggedIn(true); // Set login status to true
+      toast.success("Login successful!");
+    } catch (error) {
+      console.error(
+        "Login failed:",
+        error.response ? error.response.data : error.message
+      );
+      setLoading(false);
+      toast.error("Login failed: Please check your credentials.");
+    }
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  if (isLoggedIn) {
+    return <Navigate to="/" />; // Redirect to home if logged in
+  }
+
   return (
     <div className="bg-[#F9F9F9] min-h-screen py-8 px-4">
       <div className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto">
@@ -19,26 +52,29 @@ const Login = () => {
             Welcome Back
           </h1>
           <p className="text-center text-gray-400 text-sm sm:text-base">
-            Login your account
+            Login to your account
           </p>
 
-          {/* Name and Email in one row on larger screens */}
+          {/* Email input */}
           <div className="flex sm:flex-row justify-between mt-4 gap-4 sm:gap-2">
             <div className="w-full sm:w-full">
               <div className="font-bold text-lg sm:text-xl mb-1">Email</div>
               <input
                 type="email"
                 placeholder="Email"
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
               />
             </div>
           </div>
 
+          {/* Password input */}
           <div className="mt-4 font-bold text-lg sm:text-xl mb-1">Password</div>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="**********"
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
             />
             <button
@@ -50,12 +86,19 @@ const Login = () => {
             </button>
           </div>
 
+          {/* Login button */}
           <div className="flex items-center justify-center mt-6">
-            <button className="w-full sm:w-auto px-8 bg-[#FBB03B] py-2 rounded-lg text-white cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B]">
-              Login
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full sm:w-auto px-8 bg-[#FBB03B] py-2 rounded-lg text-white cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B]"
+            >
+              {loading ? <ClipLoader size={30} color="white" /> : "Login"}
             </button>
           </div>
-          <div className="text-center text-md text-gray-400 mt-4 hover:text-[#FBB03B] cursor-pointer">Forgot Password?</div>
+          <div className="text-center text-md text-gray-400 mt-4 hover:text-[#FBB03B] cursor-pointer">
+            Forgot Password?
+          </div>
 
           <div className="text-gray-400 text-center mt-6 text-xs sm:text-sm flex items-center gap-2">
             <span className="flex-1 border-t border-gray-300"></span>
