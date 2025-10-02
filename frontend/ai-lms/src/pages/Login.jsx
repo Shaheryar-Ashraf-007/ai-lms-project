@@ -12,7 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // New state for login status
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
   const handleLogin = async () => {
     setLoading(true);
@@ -40,7 +40,7 @@ const Login = () => {
   };
 
   if (isLoggedIn) {
-    return <Navigate to="/" />; // Redirect to home if logged in
+    return <Navigate to="/" />; 
   }
 
   return (
