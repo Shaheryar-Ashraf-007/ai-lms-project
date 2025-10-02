@@ -22,32 +22,38 @@ const Signup = () => {
   };
 
   const handleSignup = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post("/auth/signup", {
-        name,
-        email,
-        password,
-        role,
-      });
-      console.log("Signup successful:", response.data);
-      setLoading(false);
-      navigate("/");
-      toast.success("Signup successful!");
-    } catch (error) {
-      console.error(
-        "Signup failed:",
-        error.response ? error.response.data : error.message
-      );
-      setLoading(false);
-      toast.error(
-        `Signup failed: ${
-          error.response ? error.response.data.message : error.message
-        }`
-      );
-    }
-  };
+  setLoading(true);
+  try {
+    const response = await axiosInstance.post("/auth/signup", {
+      name,
+      email,
+      password,
+      role,
+    });
+    
+    console.log("Signup successful:", response.data);
+    const { token } = response.data; // Extract token from response
+    console.log("Token:", token); // Log the token here
 
+    // Store the token in local storage
+    localStorage.setItem("token", token);
+
+    setLoading(false);
+    navigate("/"); // Navigate after successful signup
+    toast.success("Signup successful!");
+  } catch (error) {
+    console.error(
+      "Signup failed:",
+      error.response ? error.response.data : error.message
+    );
+    setLoading(false);
+    toast.error(
+      `Signup failed: ${
+        error.response ? error.response.data.message : error.message
+      }`
+    );
+  }
+};
   return (
     <div className="bg-[#F9F9F9] min-h-screen py-8 px-4">
       <form className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto" onSubmit={(e) => e.preventDefault()}>
