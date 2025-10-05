@@ -2,8 +2,11 @@ import User from "../models/User.js";
 import Jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+// Sign up a new user
 export async function Signup(req, res) {
   try {
+    console.log("JWT Secret:", process.env.JWT_SECRET); // Log the secret
+
     const { email, password, name, role, photoUrl } = req.body;
 
     // Input validation
@@ -38,12 +41,15 @@ export async function Signup(req, res) {
       photoUrl: photoUrl || null,
     });
 
+    console.log("New User Created:", newUser); // Log the new user
+
     // Generate token
     let token;
     try {
       token = Jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
+      console.log("Generated Token:", token); // Log the token
     } catch (error) {
       console.error("Error generating token:", error);
       return res.status(500).json({ message: "Token generation failed" });
@@ -51,20 +57,21 @@ export async function Signup(req, res) {
 
     // Set cookie
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: "Strict",
-      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true, // Prevent client-side access to the cookie
+      sameSite: "Lax", // Adjust for local testing
+      secure: process.env.NODE_ENV === "production", // Set to true in production
     });
 
-    // Respond with user data
-    res.status(201).json({ success: true, token, user: newUser });
+    // Respond with user data (omit password)
+    res.status(201).json({ success: true, user: { ...newUser._doc, password: undefined } });
   } catch (error) {
     console.error("Error in signup:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
 
+// Log in an existing user
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -92,29 +99,31 @@ export async function login(req, res) {
       token = Jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
+      console.log("Generated Token:", token); // Log the token
     } catch (error) {
       console.error("Error generating token:", error);
       return res.status(500).json({ message: "Token generation failed" });
     }
 
     // Set cookie
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
+    res.cookie("token", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true, // Prevent client-side access to the cookie
+      sameSite: "Lax", // Adjust for local testing
+      secure: process.env.NODE_ENV === "production", // Set to true in production
     });
 
-    // Respond with token and user data
-    res.status(200).json({ success: true, token, user });
+    // Respond with user data (omit password)
+    res.status(200).json({ success: true, user: { ...user._doc, password: undefined } });
   } catch (error) {
     console.error("Error in login controller:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
+// Log out a user
 export function logout(req, res) {
   // Clear cookie
-  res.clearCookie("jwt");
+  res.clearCookie("token");
   res.status(200).json({ success: true, message: "Logout successful" });
 }
