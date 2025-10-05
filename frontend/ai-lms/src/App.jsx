@@ -3,10 +3,12 @@ import Signup from "./pages/Signup"
 import Login from "./pages/Login"
 import Home from "./pages/Home"
 import { ToastContainer } from "react-toastify"
+import GetCurrentUser from "./customHooks/getCurrentUser.js"
 
 function App() {
   return (
     <>
+    <GetCurrentUser/>
     <ToastContainer/>
 
     <Routes>
