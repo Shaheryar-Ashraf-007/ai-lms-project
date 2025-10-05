@@ -6,6 +6,8 @@ import { BsEye, BsGoogle } from "react-icons/bs";
 import axiosInstance from "../../lib/axiosInstance";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,55 +18,45 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSignup = async () => {
-  setLoading(true);
-  try {
-    const response = await axiosInstance.post("/auth/signup", {
-      name,
-      email,
-      password,
-      role,
-    });
-    
-    console.log("Signup successful:", response.data);
-    const { token } = response.data; // Extract token from response
-    console.log("Token:", token); // Log the token here
+  const handleSignup = async (e) => {
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true);
 
-    // Store the token in local storage
-    localStorage.setItem("token", token);
+    try {
+      const response = await axiosInstance.post("/auth/signup", {
+        name,
+        email,
+        password,
+        role,
+      }, { withCredentials: true });
 
-    setLoading(false);
-    navigate("/"); // Navigate after successful signup
-    toast.success("Signup successful!");
-  } catch (error) {
-    console.error(
-      "Signup failed:",
-      error.response ? error.response.data : error.message
-    );
-    setLoading(false);
-    toast.error(
-      `Signup failed: ${
-        error.response ? error.response.data.message : error.message
-      }`
-    );
-  }
-};
+      dispatch(setUserData(response.data)); 
+      
+      console.log("Response Data:", response.data); 
+
+      setLoading(false);
+      navigate("/"); 
+      toast.success("Signup successful!");
+    } catch (error) {
+      console.error("Signup failed:", error.response ? error.response.data : error.message);
+      setLoading(false);
+      toast.error(`Signup failed: ${error.response ? error.response.data.message : error.message}`);
+    }
+  };
+
   return (
     <div className="bg-[#F9F9F9] min-h-screen py-8 px-4">
-      <form className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto" onSubmit={(e) => e.preventDefault()}>
+      <form className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto" onSubmit={handleSignup}>
         {/* Left part */}
         <div className="p-4 sm:p-6 md:p-8 w-full lg:w-1/2 bg-gray-200 rounded-lg lg:rounded-l-lg lg:rounded-r-none">
-          <h1 className="text-center font-bold mt-4 text-xl sm:text-2xl">
-            Let's get Started
-          </h1>
-          <p className="text-center text-gray-400 text-sm sm:text-base">
-            Create your account
-          </p>
+          <h1 className="text-center font-bold mt-4 text-xl sm:text-2xl">Let's get Started</h1>
+          <p className="text-center text-gray-400 text-sm sm:text-base">Create your account</p>
 
           {/* Name and Email in one row on larger screens */}
           <div className="flex flex-col sm:flex-row justify-between mt-4 gap-4 sm:gap-2">
@@ -76,6 +68,7 @@ const Signup = () => {
                 onChange={(e) => setName(e.target.value)}
                 value={name}
                 className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+                required
               />
             </div>
             <div className="w-full sm:w-1/2">
@@ -86,6 +79,7 @@ const Signup = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
                 className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+                required
               />
             </div>
           </div>
@@ -98,6 +92,7 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FBB03B]"
+              required
             />
             <button
               type="button"
@@ -110,18 +105,16 @@ const Signup = () => {
 
           <div className="flex items-center justify-center mt-6 gap-4">
             <button
-              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${
-                role === "student" ? "bg-[#FBB03B] text-white" : ""
-              } rounded-lg`}
+              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${role === "student" ? "bg-[#FBB03B] text-white" : ""} rounded-lg`}
               onClick={() => setRole("student")}
+              type="button"
             >
               Student
             </button>
             <button
-              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${
-                role === "educator" ? "bg-[#FBB03B] text-white" : ""
-              } rounded-lg`}
+              className={`flex-1 sm:flex-none px-6 py-2 border border-[#FBB03B] cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B] hover:text-white ${role === "educator" ? "bg-[#FBB03B] text-white" : ""} rounded-lg`}
               onClick={() => setRole("educator")}
+              type="button"
             >
               Educator
             </button>
@@ -131,7 +124,7 @@ const Signup = () => {
             <button
               className="w-full sm:w-auto px-8 bg-[#FBB03B] py-2 rounded-lg text-white cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:bg-[#FBB03B]"
               disabled={loading}
-              onClick={handleSignup}
+              type="submit" // Change to type "submit"
             >
               {loading ? <ClipLoader size={30} color="white" /> : "Sign Up"}
             </button>
@@ -151,23 +144,13 @@ const Signup = () => {
 
           <div className="text-gray-400 text-center mt-4 text-sm">
             Already have an account?
-            <Link
-              to="/login"
-              className="text-[#FBB03B] font-bold hover:underline"
-            >
-              {" "}
-              Log In
-            </Link>
+            <Link to="/login" className="text-[#FBB03B] font-bold hover:underline"> Log In</Link>
           </div>
         </div>
 
         {/* Image - Hidden on mobile, visible on large screens */}
         <div className="hidden lg:flex bg-[#2B3B6D] items-center justify-center rounded-r-lg w-1/3 min-h-[600px]">
-          <img
-            src={image}
-            alt="logo"
-            className="w-64 xl:w-96 h-64 xl:h-96 object-contain"
-          />
+          <img src={image} alt="logo" className="w-64 xl:w-96 h-64 xl:h-96 object-contain" />
         </div>
       </form>
     </div>
