@@ -6,9 +6,9 @@ import { ToastContainer } from "react-toastify"
 import GetCurrentUser from "./customHooks/getCurrentUser.js"
 
 function App() {
+  GetCurrentUser()
   return (
     <>
-    <GetCurrentUser/>
     <ToastContainer/>
 
     <Routes>

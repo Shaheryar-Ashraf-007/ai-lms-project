@@ -9,13 +9,17 @@ const GetCurrentUser = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axiosInstance.get("/user/current-user");
+        const response = await axiosInstance.get("/user/current-user", {
+          withCredentials: true,
+        });
         dispatch(setUserData(response.data));
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error(
+          "Error fetching user data:",
+          error.response ? error.response.data : error.message
+        );
       }
     };
-
     fetchUser();
   }, [dispatch]);
 
