@@ -14,36 +14,38 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const dispatch = useDispatch();
 
-  const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent default form submission
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post("/auth/login", {
-        email,
-        password,
-      }, { withCredentials: true });
+  const handleLogin = async () => {
+  setLoading(true);
+  try {
+    const response = await axiosInstance.post("/auth/login", {
+      email,
+      password,
+    }, { withCredentials: true });
 
-      // Assuming the token is in response.data.token
-      const token = response.data.token;
-      console.log("token",token) // Adjust according to your API response
-      // No need to store the token in localStorage if using cookies
-      // localStorage.setItem("token", token); // Uncomment if you want to store in local storage
+    console.log("Login Response:", response.data); // Check the entire response
 
-      dispatch(setUserData(response.data)); // Dispatch user data to Redux
-      setLoading(false);
-      setIsLoggedIn(true); // Set login status to true
-      toast.success("Login successful!");
-    } catch (error) {
-      console.error("Login failed:", error.response ? error.response.data : error.message);
-      setLoading(false);
-      toast.error("Login failed: Please check your credentials.");
+    const token = response.data.token; // This should now retrieve the token
+    if (!token) {
+      throw new Error("Token not received");
     }
-  };
 
+    // Optionally store the token in local storage (if needed)
+    // localStorage.setItem("token", token);
+
+    dispatch(setUserData(response.data)); // Dispatch user data to Redux
+    setLoading(false);
+    setIsLoggedIn(true); // Set login status to true
+    toast.success("Login successful!");
+  } catch (error) {
+    console.error("Login failed:", error.response ? error.response.data : error.message);
+    setLoading(false);
+    toast.error("Login failed: Please check your credentials.");
+  }
+};
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -57,8 +59,12 @@ const Login = () => {
       <div className="flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto">
         {/* Left part */}
         <div className="p-4 sm:p-6 md:p-8 w-full h-[600px] lg:w-1/2 bg-gray-200 rounded-lg lg:rounded-l-lg lg:rounded-r-none">
-          <h1 className="text-center font-bold mt-4 text-xl sm:text-2xl">Welcome Back</h1>
-          <p className="text-center text-gray-400 text-sm sm:text-base">Login to your account</p>
+          <h1 className="text-center font-bold mt-4 text-xl sm:text-2xl">
+            Welcome Back
+          </h1>
+          <p className="text-center text-gray-400 text-sm sm:text-base">
+            Login to your account
+          </p>
 
           {/* Email input */}
           <div className="flex sm:flex-row justify-between mt-4 gap-4 sm:gap-2">
@@ -125,7 +131,8 @@ const Login = () => {
               to="/signup"
               className="text-[#FBB03B] font-bold hover:underline"
             >
-              {" "}Sign Up
+              {" "}
+              Sign Up
             </Link>
           </div>
         </div>
