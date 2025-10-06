@@ -15,7 +15,9 @@ export async function Signup(req, res) {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be greater than 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be greater than 6 characters" });
     }
 
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,7 +66,9 @@ export async function Signup(req, res) {
     });
 
     // Respond with user data (omit password)
-    res.status(201).json({ success: true, user: { ...newUser._doc, password: undefined } });
+    res
+      .status(201)
+      .json({ success: true, user: { ...newUser._doc, password: undefined } });
   } catch (error) {
     console.error("Error in signup:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -107,20 +111,23 @@ export async function login(req, res) {
 
     // Set cookie
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      httpOnly: true, // Prevent client-side access to the cookie
-      sameSite: "Lax", // Adjust for local testing
-      secure: process.env.NODE_ENV === "production", // Set to true in production
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: false, // Set to true in production
     });
 
-    // Respond with user data (omit password)
-    res.status(200).json({ success: true, user: { ...user._doc, password: undefined } });
+    // Respond with user data and token
+    res.status(200).json({
+      success: true,
+      token: token, // Ensure the token is included here
+      user: { ...user._doc, password: undefined },
+    });
   } catch (error) {
     console.error("Error in login controller:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
-
 // Log out a user
 export function logout(req, res) {
   // Clear cookie
