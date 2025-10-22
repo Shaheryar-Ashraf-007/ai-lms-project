@@ -131,7 +131,7 @@ const Login = () => {
                     to="/forgot-password"
                     className="text-sm font-medium text-[#FBB03B] hover:text-[#e9a035] transition-colors duration-200 cursor-pointer"
 
-                  >
+                  onClick={()=>navigate("/forget-password")}>
                     Forgot Password?
                   </Link>
                 </div>
