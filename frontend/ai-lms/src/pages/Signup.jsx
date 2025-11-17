@@ -1,12 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import image from "../assets/image.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { BsEye, BsGoogle } from "react-icons/bs";
 import axiosInstance from "../../lib/axiosInstance";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 
 const Signup = () => {
@@ -19,6 +19,37 @@ const Signup = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const userData = useSelector((state) => state.user.userData);
+
+  // Check for token and user data in local storage
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (token && storedUser) {
+      // Restore user data if both exist
+      try {
+        dispatch(setUserData(JSON.parse(storedUser)));
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        // Clear invalid data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        dispatch(setUserData(null));
+      }
+    } else {
+      // Clear if either is missing
+      dispatch(setUserData(null));
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+  }, [dispatch]);
+
+  // Redirect if user is already logged in
+  const token = localStorage.getItem("token");
+  if (userData && token) {
+    return <Navigate to="/" />;
+  }
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -36,15 +67,20 @@ const Signup = () => {
         role,
       }, { withCredentials: true });
 
-      dispatch(setUserData(response.data)); 
-      
-      console.log("Response Data:", response.data); 
+      console.log("Signup Response Data:", response.data);
+      toast.success("Account created successfully! Please login.");
 
-      toast.success("Signup successful!");
-      navigate("/"); 
+      // Clear form
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("student");
+
+      // Redirect to login page
+      navigate("/login");
     } catch (error) {
       console.error("Signup failed:", error.response ? error.response.data : error.message);
-      toast.error(`Signup failed: ${error.response ? error.response.data.message : error.message}`);
+      toast.error(`Signup failed: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
     }

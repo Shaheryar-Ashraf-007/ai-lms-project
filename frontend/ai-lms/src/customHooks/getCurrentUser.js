@@ -1,29 +1,26 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import axios from "axios";
 import { setUserData } from "../redux/userSlice";
-import axiosInstance from "../../lib/axiosInstance";
 
-const GetCurrentUser = () => {
-  const dispatch = useDispatch();
+const GetCurrentUser = async (dispatch) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axiosInstance.get("/user/current-user", {
-          withCredentials: true,
-        });
-        dispatch(setUserData(response.data));
-      } catch (error) {
-        console.error(
-          "Error fetching user data:",
-          error.response ? error.response.data : error.message
-        );
-      }
-    };
-    fetchUser();
-  }, [dispatch]);
+    const res = await axios.get("/api/current-user", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  return null;
+    if (res.data) {
+      dispatch(setUserData(res.data));
+      localStorage.setItem("userData", JSON.stringify(res.data));
+    }
+  } catch (err) {
+    console.error("Error fetching current user:", err);
+    // If token expired or invalid
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    dispatch(setUserData(null));
+  }
 };
 
 export default GetCurrentUser;
