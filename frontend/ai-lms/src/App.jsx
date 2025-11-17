@@ -1,37 +1,56 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import Home from "./pages/Home";
-import { ToastContainer } from "react-toastify";
-import GetCurrentUser from "./customHooks/getCurrentUser.js";
-import { useSelector } from "react-redux";
-import Profile from "./pages/Profile.jsx";
-import ForgetPassword from "./pages/ForgetPassword.jsx";
+import Profile from "./pages/Profile";
+import ForgetPassword from "./pages/ForgetPassword";
+
+import { setUserData } from "./redux/userSlice";
 
 function App() {
-  GetCurrentUser();
-
+  const dispatch = useDispatch();
   const { userData } = useSelector((state) => state.user);
+
+  // ✅ Restore user from localStorage on app load
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
+      dispatch(setUserData(JSON.parse(storedUser)));
+    }
+  }, [dispatch]);
+
   return (
     <>
       <ToastContainer />
-
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/* Signup Route */}
         <Route
           path="/signup"
-          element={!userData ? <Signup /> : <Navigate to={"/"} />}
-        />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/profile"
-          element={userData ? <Profile /> : <Navigate to={"/signup"} />}
+          element={!userData ? <Signup /> : <Navigate to="/" />}
         />
 
+        {/* Login Route */}
         <Route
-          path="/forget-password"
-          element={ <ForgetPassword />}
+          path="/login"
+          element={!userData ? <Login /> : <Navigate to="/" />}
         />
+
+        {/* Profile Route (Protected) */}
+        <Route
+          path="/profile"
+          element={userData ? <Profile /> : <Navigate to="/login" />}
+        />
+
+        {/* Forget Password Route (Public) */}
+        <Route path="/forget-password" element={<ForgetPassword />} />
       </Routes>
     </>
   );

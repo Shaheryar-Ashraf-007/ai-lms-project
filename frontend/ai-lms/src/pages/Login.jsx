@@ -1,6 +1,6 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import image from "../assets/image.png";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { BsEye, BsGoogle } from "react-icons/bs";
 import axiosInstance from "../../lib/axiosInstance";
@@ -20,16 +20,8 @@ const Login = () => {
   const userData = useSelector((state) => state.user.userData);
   const navigate = useNavigate();
 
-  // Check token on component mount
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    
-    // If no token in localStorage, clear Redux state
-    if (!token || !storedUser) {
-      dispatch(setUserData(null));
-    }
-  }, [dispatch]);
+  // REMOVED: The useEffect that was restoring data on every component mount
+  // This was causing the bug where logout + refresh would restore the session
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -37,20 +29,23 @@ const Login = () => {
 
     try {
       const res = await axiosInstance.post("/auth/login", { email, password });
+      console.log("API Response:", res.data);
 
       const { token, user } = res.data;
 
       if (!token || !user) throw new Error("Invalid response from server");
 
+      console.log("Generated Token:", token);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+      console.log("Token saved:", localStorage.getItem("token"));
 
       dispatch(setUserData(user));
 
       toast.success("Login successful!");
       navigate("/");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error:", error.response ? error.response.data : error);
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -85,7 +80,7 @@ const Login = () => {
               </div>
 
               {/* Form */}
-              <div className="space-y-5 lg:space-y-6">
+              <form onSubmit={handleLogin} className="space-y-5 lg:space-y-6">
                 {/* Email Input */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -120,7 +115,11 @@ const Login = () => {
                       onClick={togglePasswordVisibility}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200 cursor-pointer"
                     >
-                      {showPassword ? <FiEyeOff size={20} /> : <BsEye size={20} />}
+                      {showPassword ? (
+                        <FiEyeOff size={20} />
+                      ) : (
+                        <BsEye size={20} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -128,32 +127,29 @@ const Login = () => {
                 {/* Forgot Password */}
                 <div className="flex justify-end">
                   <Link
-                    to="/forgot-password"
+                    to="/forget-password"
                     className="text-sm font-medium text-[#FBB03B] hover:text-[#e9a035] transition-colors duration-200 cursor-pointer"
-
-                  onClick={()=>navigate("/forget-password")}>
-                    Forgot Password?
+                  >
+                    Forget Password?
                   </Link>
                 </div>
 
                 {/* Login Button */}
                 <button
-                  onClick={handleLogin}
+                  type="submit"
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-[#FBB03B] to-[#f5a732] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center cursor-pointer"
                 >
-                  {loading ? (
-                    <ClipLoader size={20} color="white" />
-                  ) : (
-                    "Login"
-                  )}
+                  {loading ? <ClipLoader size={20} color="white" /> : "Login"}
                 </button>
-              </div>
+              </form>
 
               {/* Divider */}
               <div className="flex items-center gap-4 my-6 lg:my-8">
                 <span className="flex-1 border-t border-gray-300"></span>
-                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">Or continue with</span>
+                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                  Or continue with
+                </span>
                 <span className="flex-1 border-t border-gray-300"></span>
               </div>
 
@@ -183,7 +179,7 @@ const Login = () => {
               {/* Decorative circles */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#FBB03B] rounded-full opacity-10 -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#FBB03B] rounded-full opacity-10 -ml-24 -mb-24"></div>
-              
+
               <div className="relative z-10 flex items-center justify-center">
                 <img
                   src={image}
