@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "../redux/userSlice";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../../utills/firebase";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -85,6 +87,32 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  const googleSignup = async()=>{
+    try {
+      const response = await signInWithPopup(auth, provider)
+      let user = response.user
+      let name = user.displayName
+      let email = user.email
+
+
+      const result = await axiosInstance.post("/auth/googleauth",{
+        name,
+        email,
+        role
+      },
+      {
+        withCredentials:true
+      })
+
+      dispatch(setUserData(result.data))
+      navigate("/")
+      toast.success("Signup Successfully")
+    } catch (error) {
+      toast.error(error.response.data.message)
+      
+    }
+  }
 
   return (
     <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
@@ -218,6 +246,7 @@ const Signup = () => {
               <button
                 type="button"
                 className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
+                onClick={googleSignup}
               >
                 <BsGoogle size={20} />
                 <span>Sign up with Google</span>
