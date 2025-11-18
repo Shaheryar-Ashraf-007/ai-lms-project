@@ -208,3 +208,43 @@ export const resetPassword = async (req, res) => {
     return res.status(500).json({ message: `Reset password error: ${error.message}` });
   }
 };
+
+export const googleAuth = async (req,res) => {
+  try {
+    const { name, email, role } = req.body;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if not found
+      user = await User.create({ name, email, role });
+    }
+
+    let token;
+    try {
+      // Generate JWT token
+      token = Jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      console.log("Generated Token:", token); // Log the token
+    } catch (error) {
+      console.error("Error generating token:", error);
+      return res.status(500).json({ message: "Token generation failed" });
+    }
+
+    // Set cookie with the JWT token
+    res.cookie("token", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: process.env.NODE_ENV === 'production', // Secure in production
+    });
+
+    // Send success response
+    return res.status(200).json({ message: "User authenticated successfully" });
+  } catch (error) {
+    console.error("Error during Google authentication:", error);
+    return res.status(500).json({ message: `Google auth error: ${error.message || error}` });
+  }
+};
