@@ -104,7 +104,7 @@ export async function login(req, res) {
       token = Jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
-      console.log("Generated Token:", token); // Log the token
+      console.log("Generated Token:", token); // Consider if this log is necessary in production
     } catch (error) {
       console.error("Error generating token:", error);
       return res.status(500).json({ message: "Token generation failed" });
@@ -112,24 +112,23 @@ export async function login(req, res) {
 
     // Set cookie
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
       sameSite: "Lax",
-      secure: false, // Set to true in production
+      secure: false, // Change to true in production
     });
 
     // Respond with user data and token
     res.status(200).json({
       success: true,
-      token: token, // Ensure the token is included here
-      user: { ...user._doc, password: undefined },
+      token: token,
+      user: { ...user._doc, password: undefined }, // Ensure the password is excluded
     });
   } catch (error) {
     console.error("Error in login controller:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
-// Log out a user
 export function logout(req, res) {
   // Clear cookie
   res.clearCookie("token");
@@ -209,7 +208,7 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-export const googleAuth = async (req,res) => {
+export const googleAuth = async (req, res) => {
   try {
     const { name, email, role } = req.body;
 
@@ -241,8 +240,17 @@ export const googleAuth = async (req,res) => {
       secure: process.env.NODE_ENV === 'production', // Secure in production
     });
 
-    // Send success response
-    return res.status(200).json({ message: "User authenticated successfully" });
+    // Send success response with user data
+    return res.status(200).json({
+      message: "User authenticated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      token, // Including the token in the response
+    });
   } catch (error) {
     console.error("Error during Google authentication:", error);
     return res.status(500).json({ message: `Google auth error: ${error.message || error}` });
