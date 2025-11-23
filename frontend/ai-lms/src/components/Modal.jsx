@@ -16,7 +16,7 @@ const SideModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (token && user && !userData) {
       try {
-        const parsedUser = JSON.parse(user);
+        const parsedUser = user;
         dispatch(setUserData(parsedUser));
       } catch (error) {
         console.error("Failed to parse user data:", error);

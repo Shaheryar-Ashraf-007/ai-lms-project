@@ -62,12 +62,16 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post("/auth/signup", {
-        name,
-        email,
-        password,
-        role,
-      }, { withCredentials: true });
+      const response = await axiosInstance.post(
+        "/auth/signup",
+        {
+          name,
+          email,
+          password,
+          role,
+        },
+        { withCredentials: true }
+      );
 
       console.log("Signup Response Data:", response.data);
       toast.success("Account created successfully! Please login.");
@@ -81,39 +85,70 @@ const Signup = () => {
       // Redirect to login page
       navigate("/login");
     } catch (error) {
-      console.error("Signup failed:", error.response ? error.response.data : error.message);
-      toast.error(`Signup failed: ${error.response?.data?.message || error.message}`);
+      console.error(
+        "Signup failed:",
+        error.response ? error.response.data : error.message
+      );
+      toast.error(
+        `Signup failed: ${error.response?.data?.message || error.message}`
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const googleSignup = async()=>{
-    try {
-      const response = await signInWithPopup(auth, provider)
-      let user = response.user
-      let name = user.displayName
-      let email = user.email
+   const googleSignup = async () => {
+  try {
+    // Sign in with Google
+    const response = await signInWithPopup(auth, provider);
+    const user = response.user;
 
+    // Extract user information
+    const name = user.displayName || ""; 
+    const email = user.email || ""; 
+    const role = "student"; 
 
-      const result = await axiosInstance.post("/auth/googleauth",{
+    // Check if user information is available
+    if (!name || !email) {
+      throw new Error("Name and email are required from Google.");
+    }
+
+    console.log("Sending data to backend:", { name, email, role });
+
+    // Send user data to the backend
+    const result = await axiosInstance.post(
+      "/auth/googleauth",
+      {
         name,
         email,
-        role
+        role,
       },
       {
-        withCredentials:true
-      })
+        withCredentials: true, // Ensure that cookies are sent with the request
+      }
+    );
 
-      dispatch(setUserData(result.data))
-      navigate("/")
-      toast.success("Signup Successfully")
-    } catch (error) {
-      toast.error(error.response.data.message)
-      
-    }
+    console.log("Google Signup Response Data:", result.data); // Changed to match the correct response variable
+
+    // Dispatch user data to your Redux store
+    dispatch(setUserData(result.data.user)); // Ensure this only uses serializable data
+
+    // Store user data in local storage
+    localStorage.setItem("token", result.data.token); // Store the token
+    localStorage.setItem("user", JSON.stringify(result.data.user)); // Stringify user data
+
+    // Navigate to the desired route
+    navigate("/");
+    toast.success("Signup Successfully with Google!");
+  } catch (error) {
+    // Improved error handling
+    console.error("Error during Google Signup:", error);
+
+    // Handle both network errors and server errors
+    const errorMessage = error.response?.data?.message || error.message || "An unexpected error occurred.";
+    toast.error(errorMessage);
   }
-
+};
   return (
     <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-6xl mx-auto">
@@ -185,7 +220,11 @@ const Signup = () => {
                       onClick={togglePasswordVisibility}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200 cursor-pointer"
                     >
-                      {showPassword ? <FiEyeOff size={20} /> : <BsEye size={20} />}
+                      {showPassword ? (
+                        <FiEyeOff size={20} />
+                      ) : (
+                        <BsEye size={20} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -227,18 +266,16 @@ const Signup = () => {
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-[#FBB03B] to-[#f5a732] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center cursor-pointer"
                 >
-                  {loading ? (
-                    <ClipLoader size={20} color="white" />
-                  ) : (
-                    "Sign Up"
-                  )}
+                  {loading ? <ClipLoader size={20} color="white" /> : "Sign Up"}
                 </button>
               </form>
 
               {/* Divider */}
               <div className="flex items-center gap-4 my-6 lg:my-8">
                 <span className="flex-1 border-t border-gray-300"></span>
-                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">Or continue with</span>
+                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                  Or continue with
+                </span>
                 <span className="flex-1 border-t border-gray-300"></span>
               </div>
 
@@ -269,7 +306,7 @@ const Signup = () => {
               {/* Decorative circles */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#FBB03B] rounded-full opacity-10 -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#FBB03B] rounded-full opacity-10 -ml-24 -mb-24"></div>
-              
+
               <div className="relative z-10 flex items-center justify-center">
                 <img
                   src={image}
