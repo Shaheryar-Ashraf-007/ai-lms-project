@@ -9,6 +9,8 @@ import { ClipLoader } from "react-spinners";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import "../index.css";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../../utills/firebase";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,9 +21,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const userData = useSelector((state) => state.user.userData);
   const navigate = useNavigate();
-
-  // REMOVED: The useEffect that was restoring data on every component mount
-  // This was causing the bug where logout + refresh would restore the session
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -55,6 +54,57 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  const googleLogin = async () => {
+  try {
+    // Sign in with Google
+    const response = await signInWithPopup(auth, provider);
+    const user = response.user;
+
+    // Extract user information
+    const name = user.displayName || ""; 
+    const email = user.email || ""; 
+    const role = "student"; 
+
+    // Check if user information is available
+    if (!name || !email) {
+      throw new Error("Name and email are required from Google.");
+    }
+
+    console.log("Sending data to backend:", { name, email, role });
+
+    // Send user data to the backend
+    const result = await axiosInstance.post(
+      "/auth/googleauth",
+      {
+        name,
+        email,
+        role,
+      },
+      {
+        withCredentials: true, 
+      }
+    );
+
+    console.log("Google Signup Response Data:", result.data);
+
+    
+    dispatch(setUserData(result.data.user)); 
+
+    localStorage.setItem("token", result.data.token); // Store the token
+    localStorage.setItem("user", JSON.stringify(result.data.user)); // Stringify user data
+
+    // Navigate to the desired route
+    navigate("/");
+    toast.success("Signup Successfully with Google!");
+  } catch (error) {
+    // Improved error handling
+    console.error("Error during Google Signup:", error);
+
+    // Handle both network errors and server errors
+    const errorMessage = error.response?.data?.message || error.message || "An unexpected error occurred.";
+    toast.error(errorMessage);
+  }}
 
   // Check both Redux state AND localStorage token
   const token = localStorage.getItem("token");
@@ -156,8 +206,12 @@ const Login = () => {
               {/* Google Sign In */}
               <button
                 type="button"
+                disabled={loading}
+
                 className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
+                onClick={googleLogin}
               >
+                {loading ? <ClipLoader size={20} color="white" /> : "Login"}
                 <BsGoogle size={20} />
                 <span>Sign in with Google</span>
               </button>
