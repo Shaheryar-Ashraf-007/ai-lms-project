@@ -38,7 +38,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full h-20 bg-[#2B3B6D] text-white pl-6 pb-2 pt-2 pr-6">
+    <nav className="w-full lg:h-20 h-15 bg-[#2B3B6D] text-white pl-6 lg:pt-4 pr-6">
       <div className="flex flex-wrap items-center justify-between">
         {/* Logo */}
         <div

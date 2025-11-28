@@ -64,7 +64,7 @@ const Login = () => {
     // Extract user information
     const name = user.displayName || ""; 
     const email = user.email || ""; 
-    const role = "student"; 
+    const role = ""; 
 
     // Check if user information is available
     if (!name || !email) {
