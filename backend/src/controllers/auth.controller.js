@@ -44,7 +44,7 @@ export async function Signup(req, res) {
       photoUrl: photoUrl || null,
     });
 
-    console.log("New User Created:", newUser); // Log the new user
+    console.log("New User Created:", newUser); 
 
     // Generate token
     let token;
@@ -52,7 +52,7 @@ export async function Signup(req, res) {
       token = Jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
-      console.log("Generated Token:", token); // Log the token
+      console.log("Generated Token:", token); 
     } catch (error) {
       console.error("Error generating token:", error);
       return res.status(500).json({ message: "Token generation failed" });
@@ -60,13 +60,12 @@ export async function Signup(req, res) {
 
     // Set cookie
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      httpOnly: true, // Prevent client-side access to the cookie
-      sameSite: "Lax", // Adjust for local testing
-      secure: process.env.NODE_ENV === "production", // Set to true in production
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      httpOnly: true, 
+      sameSite: "Lax", 
+      secure: process.env.NODE_ENV === "production", 
     });
 
-    // Respond with user data (omit password)
     res
       .status(201)
       .json({ success: true, user: { ...newUser._doc, password: undefined } });
@@ -76,7 +75,6 @@ export async function Signup(req, res) {
   }
 }
 
-// Log in an existing user
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
