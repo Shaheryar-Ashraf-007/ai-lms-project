@@ -26,17 +26,17 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [formData, setFormData] = useState({
-    name: userData?.name.slice(0,1).toUpperCase() || '',
+    name: userData?.name || '',
     email: userData?.email || '',
     phone: userData?.phone || '',
     location: userData?.location || '',
     description: userData?.description || '',
-    joinDate: userData?.joinDate || ''
+    joinDate: userData?.joinDate || new Date().toISOString().split('T')[0]
   });
 
   const fileInputRef = useRef(null);
 
-  // Enrolled courses from userData or API
+  // Enrolled courses from userData
   const enrolledCourses = userData?.enrolledCourses || [];
 
   // Calculate stats
@@ -53,14 +53,31 @@ const Profile = () => {
         phone: userData.phone || '',
         location: userData.location || '',
         description: userData.description || '',
-        joinDate: userData.joinDate || ''
+        joinDate: userData.joinDate || new Date().toISOString().split('T')[0]
       });
+      
+      // Set profile image if exists
+      if (userData.photoUrl) {
+        setProfileImage(userData.photoUrl);
+      }
     }
   }, [userData]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
@@ -92,14 +109,24 @@ const Profile = () => {
         try {
           // Using OpenStreetMap's Nominatim API for reverse geocoding
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+            {
+              headers: {
+                'User-Agent': 'ProfileApp/1.0'
+              }
+            }
           );
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch location');
+          }
+          
           const data = await response.json();
           
           // Extract city and country from the response
-          const city = data.address.city || data.address.town || data.address.village || '';
+          const city = data.address.city || data.address.town || data.address.village || data.address.county || '';
           const country = data.address.country || '';
-          const locationString = `${city}, ${country}`;
+          const locationString = city && country ? `${city}, ${country}` : city || country || 'Unknown Location';
           
           setFormData({
             ...formData,
@@ -114,7 +141,23 @@ const Profile = () => {
       },
       (error) => {
         console.error('Error getting location:', error);
-        alert('Unable to retrieve your location. Please check your browser permissions.');
+        let errorMessage = 'Unable to retrieve your location. ';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += 'Please allow location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage += 'Location request timed out.';
+            break;
+          default:
+            errorMessage += 'An unknown error occurred.';
+        }
+        
+        alert(errorMessage);
         setLoadingLocation(false);
       },
       {
@@ -126,29 +169,68 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    // Prepare updated data
-    const updatedData = {
-      ...userData,
-      ...formData,
-      photoUrl: profileImage || userData?.photoUrl
-    };
-
-    // Dispatch to Redux
-    dispatch(setUserData(updatedData));
+    // Validate required fields
+    if (!formData.name.trim()) {
+      alert('Name is required');
+      return;
+    }
     
-    setIsEditing(false);
+    if (!formData.email.trim()) {
+      alert('Email is required');
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
+    // Phone validation (optional, only if provided)
+    if (formData.phone && formData.phone.trim()) {
+      const phoneRegex = /^[+]?[\d\s-()]+$/;
+      if (!phoneRegex.test(formData.phone)) {
+        alert('Please enter a valid phone number');
+        return;
+      }
+    }
+
+    try {
+      // Prepare updated data
+      const updatedData = {
+        ...userData,
+        ...formData,
+        photoUrl: profileImage || userData?.photoUrl || null,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Dispatch to Redux (will automatically save to localStorage)
+      dispatch(setUserData(updatedData));
+      
+      setIsEditing(false);
+      
+      console.log('Profile updated successfully');
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile. Please try again.');
+    }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: userData?.name || '',
-      email: userData?.email || '',
-      phone: userData?.phone || '',
-      location: userData?.location || '',
-      description: userData?.description || '',
-      joinDate: userData?.joinDate || ''
-    });
-    setProfileImage(null);
+    // Reset form to original userData
+    if (userData) {
+      setFormData({
+        name: userData.name || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        location: userData.location || '',
+        description: userData.description || '',
+        joinDate: userData.joinDate || new Date().toISOString().split('T')[0]
+      });
+      setProfileImage(userData.photoUrl || null);
+    }
     setIsEditing(false);
   };
 
@@ -244,6 +326,18 @@ const Profile = () => {
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#FBB03B] focus:outline-none transition-colors duration-200"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="your.email@example.com"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#FBB03B] focus:outline-none transition-colors duration-200"
+                    />
+                  </div>
                   
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
@@ -336,7 +430,9 @@ const Profile = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Joined</p>
-                    <p className="text-sm font-semibold text-gray-700">{formData.joinDate || 'N/A'}</p>
+                    <p className="text-sm font-semibold text-gray-700">
+                      {formData.joinDate ? new Date(formData.joinDate).toLocaleDateString() : 'N/A'}
+                    </p>
                   </div>
                 </div>
               </div>

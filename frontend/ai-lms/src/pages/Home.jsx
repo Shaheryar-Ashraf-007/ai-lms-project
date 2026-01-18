@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Search, BookOpen } from 'lucide-react'
 import Navbar from "../components/Navbar"
+import EnrollCourse from '../components/EnrollCourse';
 
 
 const Home = () => {
@@ -133,6 +134,8 @@ const Home = () => {
           animation: fade-in 1s ease-out;
         }
       `}</style>
+
+      <EnrollCourse/>
     </div>
   )
 }
