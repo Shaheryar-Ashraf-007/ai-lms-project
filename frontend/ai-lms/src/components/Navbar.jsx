@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { CgProfile } from "react-icons/cg";
 import { MenuIcon } from "lucide-react";
-import image from "../assets/image.png";
 import axiosInstance from "../../lib/axiosInstance";
 import { setUserData } from "../redux/userSlice";
 import Dropdown from "./Dropdown";
