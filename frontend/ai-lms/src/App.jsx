@@ -10,6 +10,8 @@ import Profile from "./pages/Profile";
 import ForgetPassword from "./pages/ForgetPassword";
 
 import { setUserData } from "./redux/userSlice";
+import Dashboard from "./pages/Educator/Dashboard";
+import Courses from "./pages/Educator/Courses";
 
 function App() {
   const dispatch = useDispatch();
@@ -51,6 +53,16 @@ function App() {
 
         {/* Forget Password Route (Public) */}
         <Route path="/forget-password" element={<ForgetPassword />} />
+
+        <Route
+          path="/dashboard"
+          element={userData ?.role === "educator" ? <Dashboard /> : <Navigate to="/signup" />}
+        />
+
+         <Route
+          path="/courses"
+          element={userData ?.role === "educator" ? <Courses /> : <Navigate to="/signup" />}
+        />
       </Routes>
     </>
   );
