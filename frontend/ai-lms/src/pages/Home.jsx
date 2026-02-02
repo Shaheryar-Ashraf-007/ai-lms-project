@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Search, BookOpen } from 'lucide-react'
 import Navbar from "../components/Navbar"
 import EnrollCourse from '../components/EnrollCourse';
+import CardPage from '../components/CardPage';
 
 
 const Home = () => {
@@ -136,6 +137,7 @@ const Home = () => {
       `}</style>
 
       <EnrollCourse/>
+      <CardPage/>
     </div>
   )
 }

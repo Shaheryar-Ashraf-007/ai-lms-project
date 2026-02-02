@@ -9,21 +9,26 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ForgetPassword from "./pages/ForgetPassword";
 
-import { setUserData } from "./redux/userSlice";
 import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
+import CreateCoursePage from "./pages/Educator/CreateCourses";
+
+import { setUserData, clearUserData } from "./redux/userSlice";
+import EditCourses from "./pages/Educator/EditCourses";
 
 function App() {
   const dispatch = useDispatch();
-  const { userData } = useSelector((state) => state.user);
+  const { userData, isAuthenticated } = useSelector((state) => state.user);
 
-  // ✅ Restore user from localStorage on app load
+  // ✅ Restore user on app load
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("userData");
     const token = localStorage.getItem("token");
 
     if (storedUser && token) {
       dispatch(setUserData(JSON.parse(storedUser)));
+    } else {
+      dispatch(clearUserData());
     }
   }, [dispatch]);
 
@@ -31,37 +36,82 @@ function App() {
     <>
       <ToastContainer />
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Home />} />
-
-        {/* Signup Route */}
-        <Route
-          path="/signup"
-          element={!userData ? <Signup /> : <Navigate to="/" />}
-        />
-
-        {/* Login Route */}
-        <Route
-          path="/login"
-          element={!userData ? <Login /> : <Navigate to="/" />}
-        />
-
-        {/* Profile Route (Protected) */}
-        <Route
-          path="/profile"
-          element={userData ? <Profile /> : <Navigate to="/login" />}
-        />
-
-        {/* Forget Password Route (Public) */}
         <Route path="/forget-password" element={<ForgetPassword />} />
 
+        {/* Auth Routes */}
         <Route
-          path="/dashboard"
-          element={userData ?.role === "educator" ? <Dashboard /> : <Navigate to="/signup" />}
+          path="/signup"
+          element={!isAuthenticated ? <Signup /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/login"
+          element={!isAuthenticated ? <Login /> : <Navigate to="/" />}
         />
 
-         <Route
+        {/* Protected User Route */}
+        <Route
+          path="/profile"
+          element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+        />
+
+        {/* Educator Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            isAuthenticated && userData?.role === "educator" ? (
+              <Dashboard />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
           path="/courses"
-          element={userData ?.role === "educator" ? <Courses /> : <Navigate to="/signup" />}
+          element={
+            isAuthenticated && userData?.role === "educator" ? (
+              <Courses />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
+          path="/create"
+          element={
+            isAuthenticated && userData?.role === "educator" ? (
+              <CreateCoursePage />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+
+        <Route
+          path="/editCourse/:id"
+          element={
+            isAuthenticated && userData?.role === "educator" ? (
+              <EditCourses />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+
+        <Route
+          path="/create"
+          element={
+            isAuthenticated && userData?.role === "educator" ? (
+              <CreateCoursePage />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
         />
       </Routes>
     </>

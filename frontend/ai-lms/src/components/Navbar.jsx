@@ -5,14 +5,14 @@ import { toast } from "react-toastify";
 import { CgProfile } from "react-icons/cg";
 import { MenuIcon } from "lucide-react";
 import axiosInstance from "../../lib/axiosInstance";
-import { setUserData } from "../redux/userSlice";
+import { clearUserData } from "../redux/userSlice";
 import Dropdown from "./Dropdown";
 import SideModal from "./Modal";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { userData } = useSelector((state) => state.user);
+  const { userData, isAuthenticated } = useSelector((state) => state.user);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -22,17 +22,18 @@ const Navbar = () => {
   const handleLogoutClick = async () => {
     try {
       await axiosInstance.post("/auth/logout");
-      dispatch(setUserData(null));
+
+      dispatch(clearUserData());
       localStorage.removeItem("token");
+      delete axiosInstance.defaults.headers.common["Authorization"];
 
       toast.success("Logout successful");
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Logout error:", error);
       toast.error(
         error.response?.data?.message || "Logout failed. Please try again."
       );
-      navigate("/");
     }
   };
 
@@ -44,7 +45,7 @@ const Navbar = () => {
           className="flex-shrink-0 cursor-pointer py-4 px-6 lg:px-12"
           onClick={() => navigate("/")}
         >
-          <span className="text-[#FBB03B] text-2xl font-bold ">Skills Hive</span>
+          <span className="text-[#FBB03B] text-2xl font-bold">Skills Hive</span>
         </div>
 
         {/* Mobile menu icon */}
@@ -54,9 +55,9 @@ const Navbar = () => {
         />
 
         {/* Desktop navbar actions */}
-        <div className="hidden lg:flex items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+        <div className="hidden lg:flex items-center gap-2 sm:gap-3 mt-2 sm:mt-0 text-gray-700">
           {/* Profile Icon */}
-          {!userData ? (
+          {!isAuthenticated ? (
             <CgProfile
               size={26}
               onClick={handleToggleDropdown}
@@ -64,15 +65,15 @@ const Navbar = () => {
             />
           ) : (
             <div
-              className="w-12 h-12 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-[#8A8A8A] cursor-pointer"
+              className="w-12 h-12 rounded-full flex items-center justify-center text-[20px] border-2 cursor-pointer"
               onClick={handleToggleDropdown}
             >
-              {userData?.name?.slice(0, 1).toUpperCase() || ""}
+              {userData?.name?.slice(0, 1).toUpperCase()}
             </div>
           )}
 
           {/* Educator Dashboard Button */}
-          {userData?.role === "educator" && (
+          {isAuthenticated && userData?.role === "educator" && (
             <button
               onClick={() => navigate("/dashboard")}
               className="bg-[#FBB03B] text-white px-3 py-2 rounded-md cursor-pointer hover:scale-105 transition-transform duration-300 text-sm sm:text-base"
@@ -82,10 +83,10 @@ const Navbar = () => {
           )}
 
           {/* Auth Buttons */}
-          {!userData ? (
+          {!isAuthenticated ? (
             <button
               onClick={() => navigate("/login")}
-              className="bg-[#FBB03B] text-[#FBB03B] px-3 py-2 rounded-md cursor-pointer hover:scale-105 transition-transform duration-300 text-sm sm:text-base"
+              className="bg-[#FBB03B] text-white px-3 py-2 rounded-md cursor-pointer hover:scale-105 transition-transform duration-300 text-sm sm:text-base"
             >
               Login
             </button>
