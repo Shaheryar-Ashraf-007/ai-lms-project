@@ -26,6 +26,10 @@ const CourseSchema = new mongoose.Schema({
         type: Number,
     },
 
+    ratings:{
+        type: Number,
+        default: 0,
+    },
     thumbnail:{
         type: String,
     },

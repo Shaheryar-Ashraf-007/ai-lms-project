@@ -3,7 +3,7 @@ import {  googleAuth, login, logout, resetPassword, sendOTP, Signup, verifyOTP }
 
 const router = express.Router()
 
-router.post("/signup",  Signup)
+router.post("/signup",Signup)
 router.post("/login", login)
 router.post("/logout", logout)
 router.post("/sendOtp", sendOTP)

@@ -5,7 +5,8 @@ import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
+import courseRouter from "./routes/course.route.js";
+import path from "path";
 dotenv.config();
 
 const app = express();
@@ -22,9 +23,10 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies) to be sent
 }));
 
-// Routes
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/course", courseRouter)
 
 // Start the server
 app.listen(port, () => {

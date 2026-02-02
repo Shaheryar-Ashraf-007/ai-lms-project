@@ -1,7 +1,14 @@
-import Course from "../models/CourseModel";
+import Course from "../models/CourseModel.js";
 
 export const createCourse = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const { title, category } = req.body;
 
     if (!title || !category) {
@@ -16,6 +23,7 @@ export const createCourse = async (req, res) => {
       category,
       creator: req.user._id,
     });
+
     return res.status(201).json({
       success: true,
       message: "Course created successfully",
@@ -29,6 +37,7 @@ export const createCourse = async (req, res) => {
     });
   }
 };
+
 
 export const getPublishedCourses = async (req, res) => {
   try {
@@ -84,48 +93,45 @@ export const editCourse = async (req, res) => {
       category,
       level,
       price,
-      thumbnail,
       isPublished,
+      requirements,
+      learningObjectives,
     } = req.body;
 
-    let thumbnailUrl;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    // ✅ Update fields
+    if (title) course.title = title;
+    if (subTitle) course.subTitle = subTitle;
+    if (description) course.description = description;
+    if (category) course.category = category;
+    if (level) course.level = level;
+    if (price) course.price = price;
+    if (isPublished !== undefined) course.isPublished = isPublished === "true";
+
+    // ✅ Parse arrays if sent
+    if (requirements) course.requirements = JSON.parse(requirements);
+    if (learningObjectives) course.learningObjectives = JSON.parse(learningObjectives);
+
+    // ✅ Handle new thumbnail if uploaded
     if (req.file) {
-      thumbnailUrl = await uploadImageToCloudinary(req.file);
+      course.thumbnail = `/uploads/${req.file.filename}`; // Save relative path
     }
 
-    let courses = await Course.findById(courseId);
-    if (!courses) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
-    }
-
-    const updateCourses = {
-      title,
-      subTitle,
-      description,
-      category,
-      level,
-      price,
-      thumbnail,
-      isPublished,
-    };
-    const course = await Course.findByIdAndUpdate(courseId, updateCourses, {
-      new: true,
-    });
+    await course.save();
 
     return res.status(200).json({
       success: true,
       message: "Course updated successfully",
       course,
     });
+
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update course",
-      error: error.message,
-    });
+    console.error("Edit course error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
