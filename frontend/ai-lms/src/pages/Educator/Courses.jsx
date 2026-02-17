@@ -1,59 +1,105 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { Plus, Edit, Trash2, Eye, EyeOff, Search, Filter } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+  Search,
+  Filter,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axiosInstance";
 
+// ─── Inline SVG used as a fallback when no thumbnail exists ─────────────────
+const PLACEHOLDER_THUMBNAIL =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+       <rect width="400" height="300" fill="#e5e7eb"/>
+       <text x="200" y="155" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#6b7280">No Thumbnail</text>
+     </svg>`
+  );
+
 const CoursesPage = () => {
   const { userData, isAuthenticated } = useSelector((state) => state.user);
+
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // ← user-facing error state
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    if (isAuthenticated && userData?.role === "educator") {
-      fetchCourses();
-    }
-  }, [isAuthenticated, userData]);
-
-  const fetchCourses = async () => {
+  // =========================
+  // Fetch courses
+  // =========================
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const response = await axiosInstance.get("/course/creator", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const coursesData = Array.isArray(response.data)
         ? response.data
-        : response.data.courses || []; // fallback
+        : response.data.courses || [];
 
       setCourses(coursesData);
-      console.log("Fetched courses:", coursesData);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-      setCourses([]); // ensure it's always an array
+    } catch (err) {
+      console.error("Error fetching courses:", err);
+      setError("Failed to fetch courses. Please try again.");
+      setCourses([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
+  useEffect(() => {
+    if (isAuthenticated && userData?.role === "educator") {
+      fetchCourses();
+    } else {
+      // Stop the spinner so non-educators don't see an endless loading state
+      setLoading(false);
+    }
+  }, [isAuthenticated, userData, fetchCourses]);
+
+  // =========================
+  // Thumbnail helper
+  // =========================
   const getThumbnailUrl = (thumbnail) => {
-    if (!thumbnail)
-      return "https://via.placeholder.com/400x300?text=No+Thumbnail";
-
-    // If it's already a full URL
+    if (!thumbnail) return PLACEHOLDER_THUMBNAIL;
     if (thumbnail.startsWith("http")) return thumbnail;
 
-    // If it's a relative path, construct full URL
     const baseUrl = "http://localhost:3000";
-    const path = thumbnail.startsWith("/") ? thumbnail : "/" + thumbnail;
+    const path = thumbnail.startsWith("/") ? thumbnail : `/${thumbnail}`;
     return `${baseUrl}${path}`;
   };
 
+  // =========================
+  // Ratings helper ⭐
+  // =========================
+  const renderStars = (rating = 0) => {
+    const value = Number(rating) || 0;
+
+    return (
+      <div className="flex items-center gap-1 text-yellow-500">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span key={star}>{star <= value ? "★" : "☆"}</span>
+        ))}
+        <span className="ml-1 text-sm text-gray-500">({value})</span>
+      </div>
+    );
+  };
+
+  // =========================
+  // Delete course
+  // =========================
   const handleDeleteCourse = async (courseId) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
 
@@ -61,49 +107,84 @@ const CoursesPage = () => {
       await axiosInstance.delete(`/course/remove/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCourses(courses.filter((course) => course._id !== courseId));
-    } catch (error) {
-      console.error("Error deleting course:", error);
+
+      setCourses((prev) => prev.filter((course) => course._id !== courseId));
+    } catch (err) {
+      console.error("Error deleting course:", err);
+      setError("Failed to delete course. Please try again.");
     }
   };
 
+  // =========================
+  // Toggle publish
+  // =========================
   const handleTogglePublish = async (courseId, currentStatus) => {
     try {
-      await axiosInstance.post(
+      // PUT is semantically correct for updating a resource
+      await axiosInstance.put(
         `/course/editCourse/${courseId}`,
         { isPublished: !currentStatus },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      navigate("/editCourse" + courseId);
-
-      setCourses(
-        courses.map((course) =>
+      setCourses((prev) =>
+        prev.map((course) =>
           course._id === courseId
             ? { ...course, isPublished: !currentStatus }
-            : course,
-        ),
+            : course
+        )
       );
-    } catch (error) {
-      console.error("Error toggling publish status:", error);
+    } catch (err) {
+      console.error("Error toggling publish status:", err);
+      setError("Failed to update publish status. Please try again.");
     }
   };
 
+  // =========================
+  // Filters
+  // =========================
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title
-      .toLowerCase()
+      ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
+
     const matchesFilter =
       filterStatus === "all"
         ? true
         : filterStatus === "published"
-          ? course.isPublished
-          : !course.isPublished;
+        ? course.isPublished
+        : !course.isPublished;
+
     return matchesSearch && matchesFilter;
   });
 
+  // =========================
+  // Early returns
+  // =========================
+
+  // Still fetching data
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-lg">Loading courses...</p>
+      </div>
+    );
+  }
+
+  // Logged-in user is not an educator — don't render the page at all
+  if (!isAuthenticated || userData?.role !== "educator") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-lg">
+          Access denied. Only educators can manage courses.
+        </p>
+      </div>
+    );
+  }
+
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -112,6 +193,19 @@ const CoursesPage = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Courses</h1>
           <p className="text-gray-600">Manage and organize your courses</p>
         </div>
+
+        {/* User-facing error banner */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 font-bold ml-4"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Actions Bar */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
@@ -128,7 +222,7 @@ const CoursesPage = () => {
               />
             </div>
 
-            {/* Filter and Create */}
+            {/* Filter + Create */}
             <div className="flex gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:flex-none">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -155,28 +249,30 @@ const CoursesPage = () => {
         </div>
 
         {/* Courses Grid */}
-        {loading ? (
-          <p>Loading...</p>
-        ) : filteredCourses.length === 0 ? (
-          <p>No courses found</p>
+        {filteredCourses.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-500 text-lg">No courses found</p>
+            <button
+              onClick={() => navigate("/create")}
+              className="mt-4 text-indigo-600 hover:underline font-medium"
+            >
+              Create your first course →
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
               <div
                 key={course._id}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 flex flex-col"
               >
-                <div className="relative h-48 bg-gray-200 overflow-hidden">
+                {/* Thumbnail */}
+                <div className="relative h-48 bg-gray-200 overflow-hidden shrink-0">
                   <img
                     src={getThumbnailUrl(course.thumbnail)}
                     alt={course.title}
                     onError={(e) => {
-                      console.error(
-                        "Failed to load thumbnail:",
-                        course.thumbnail,
-                      );
-                      e.target.src =
-                        "https://via.placeholder.com/400x300?text=No+Thumbnail";
+                      e.target.src = PLACEHOLDER_THUMBNAIL;
                     }}
                     className="w-full h-full object-cover"
                   />
@@ -193,31 +289,48 @@ const CoursesPage = () => {
                   </div>
                 </div>
 
-                <div className="pl-5 pr-5 pt-5">
-                  <h3 className="text-xl font-bold text-gray-900 line-clamp-2 min-h-[1.5rem]">
+                {/* Content */}
+                <div className="p-5 flex flex-col flex-1">
+                  {/* Title — clamped to 2 lines via inline style (no plugin needed) */}
+                  <h3
+                    className="text-xl font-bold text-gray-900"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      minHeight: "3.5rem",
+                    }}
+                  >
                     {course.title}
                   </h3>
-                   <p className="text-sm font-normal text-gray-900 mt-0">
-                      {course.description || "No description available."}
-                      </p>
 
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-2xl font-bold text-indigo-600">
-                        ${course.price || 0}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {course.studentsEnrolled || 0} students
-                      </p>
+                  {/* Description — clamped to 2 lines */}
+                  <p
+                    className="text-sm text-gray-500 mt-1"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {course.description || "No description available."}
+                  </p>
 
-                       <p className="text-sm text-gray-500">
-                        {course.ratings || 0} Ratings
-                      </p>
-
-                    </div>
+                  {/* Price / Students / Rating */}
+                  <div className="mt-4 mb-4">
+                    <p className="text-2xl font-bold text-indigo-600">
+                      ${course.price || 0}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {course.studentsEnrolled || 0} students
+                    </p>
+                    <div className="mt-1">{renderStars(course.ratings)}</div>
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-gray-200">
+                  {/* Action Buttons — pushed to bottom */}
+                  <div className="flex gap-2 pt-4 border-t border-gray-200 mt-auto">
                     <button
                       onClick={() =>
                         handleTogglePublish(course._id, course.isPublished)
@@ -230,11 +343,13 @@ const CoursesPage = () => {
                     >
                       {course.isPublished ? (
                         <>
-                          <EyeOff className="w-4 h-4" /> Unpublish
+                          <EyeOff className="w-4 h-4" />
+                          Unpublish
                         </>
                       ) : (
                         <>
-                          <Eye className="w-4 h-4" /> Publish
+                          <Eye className="w-4 h-4" />
+                          Publish
                         </>
                       )}
                     </button>

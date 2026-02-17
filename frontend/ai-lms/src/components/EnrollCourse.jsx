@@ -34,7 +34,7 @@ const EnrollCourse = () => {
 
             <button className="group relative bg-gradient-to-r from-[#FBB03B] to-[#f59e0b] text-white px-8 py-4 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl hover:shadow-orange-300/50 transition-all duration-300 hover:scale-105 flex items-center gap-3 overflow-hidden">
               <span className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              <MdExplore className="w-6 h-6 relative z-10 group-hover:rotate-12 transition-transform" />
+              <MdExplore  className="w-6 h-6 relative z-10 group-hover:rotate-12 transition-transform" />
               <span className="relative z-10">Explore Our Courses</span>
             </button>
           </div>

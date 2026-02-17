@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage";
 
 import userReducer from "./userSlice";
 import courseReducer from "./courseSlice";
+import lectureReducer from "./lectureSlice";
 
 // Persist config
 const persistConfig = {
@@ -17,6 +18,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   user: userReducer,
   course: courseReducer,
+  lecture: lectureReducer,
 });
 
 // Persisted reducer

@@ -16,13 +16,18 @@ import {
 } from "lucide-react";
 
 import axiosInstance from "../../../lib/axiosInstance.js";
+import { GoArrowDownLeft } from "react-icons/go";
+import { useNavigate } from "react-router-dom";
 
 const EditCoursePage = ({ courseId: propCourseId }) => {
   const courseId = propCourseId || window.location.pathname.split("/").pop();
 
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [selectCourses, setSelectCourses] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -33,7 +38,7 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
     level: "",
     ratings: "",
     price: "",
-    thumbnail: null, 
+    thumbnail: null,
     requirements: [""],
     learningObjectives: [""],
     isPublished: false,
@@ -81,6 +86,7 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
         );
 
         console.log("Fetched course data:", response.data);
+        setSelectCourses(response.data.course || response.data);
 
         const course = response.data.course || response.data;
 
@@ -90,7 +96,7 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
 
         setFormData({
           title: course.title || "",
-          subtitle: course.subTitle || course.subtitle || "",
+          subtitle: course.subtitle || course.subtitle || "",
           description: course.description || "",
           category: course.category || "",
           level: course.level || "",
@@ -110,14 +116,13 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
         });
 
         // ✅ FIX #1: Check if thumbnail exists and is a string before calling startsWith
-        if (course.thumbnail && typeof course.thumbnail === 'string') {
-          const thumbnailUrl = course.thumbnail.startsWith('http') 
-            ? course.thumbnail 
-            : `http://localhost:3000${course.thumbnail.startsWith('/') ? course.thumbnail : '/' + course.thumbnail}`;
-          
+        if (course.thumbnail && typeof course.thumbnail === "string") {
+          const thumbnailUrl = course.thumbnail.startsWith("http")
+            ? course.thumbnail
+            : `http://localhost:3000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`;
+
           setThumbnailPreview(thumbnailUrl);
         }
-        
       } catch (error) {
         console.error("Error fetching course:", error);
         alert(
@@ -202,6 +207,11 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
     }
 
     if (!formData.category) newErrors.category = "Category is required";
+    if (!formData.ratings) {
+      newErrors.ratings = "Rating is required";
+    } else if (Number(formData.ratings) < 1 || Number(formData.ratings) > 5) {
+      newErrors.ratings = "Rating must be between 1 and 5";
+    }
 
     if (!formData.price) {
       newErrors.price = "Price is required";
@@ -225,37 +235,55 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
       payload.append("price", String(formData.price));
       payload.append("isPublished", String(formData.isPublished));
 
-      if (formData.subtitle?.trim()) payload.append("subTitle", formData.subtitle.trim());
-      if (formData.description?.trim()) payload.append("description", formData.description.trim());
+      if (formData.subtitle?.trim())
+        payload.append("subtitle", formData.subtitle.trim());
+      if (formData.description?.trim())
+        payload.append("description", formData.description.trim());
       if (formData.level) payload.append("level", formData.level);
-      if (formData.ratings) payload.append("ratings", formData.ratings);
+      payload.append("ratings", String(Number(formData.ratings)));
 
-      const requirements = formData.requirements.map(r => r.trim()).filter(Boolean);
-      const learningObjectives = formData.learningObjectives.map(o => o.trim()).filter(Boolean);
+      const requirements = formData.requirements
+        .map((r) => r.trim())
+        .filter(Boolean);
+      const learningObjectives = formData.learningObjectives
+        .map((o) => o.trim())
+        .filter(Boolean);
 
-      if (requirements.length) payload.append("requirements", JSON.stringify(requirements));
-      if (learningObjectives.length) payload.append("learningObjectives", JSON.stringify(learningObjectives));
+      if (requirements.length)
+        payload.append("requirements", JSON.stringify(requirements));
+      if (learningObjectives.length)
+        payload.append(
+          "learningObjectives",
+          JSON.stringify(learningObjectives),
+        );
 
-      if (formData.thumbnail instanceof File) payload.append("thumbnail", formData.thumbnail);
+      if (formData.thumbnail instanceof File)
+        payload.append("thumbnail", formData.thumbnail);
 
-      const response = await axiosInstance.post(`/course/editCourse/${courseId}`, payload);
+      const response = await axiosInstance.post(
+        `/course/editCourse/${courseId}`,
+        payload,
+      );
 
       if (response.data?.success) {
         // ✅ FIX #2: Properly set the thumbnail preview from the server response
         const updatedCourse = response.data.course || {};
-        
-        if (updatedCourse.thumbnail && typeof updatedCourse.thumbnail === 'string') {
-          const thumbnailUrl = updatedCourse.thumbnail.startsWith('http') 
-            ? updatedCourse.thumbnail 
-            : `http://localhost:3000${updatedCourse.thumbnail.startsWith('/') ? updatedCourse.thumbnail : '/' + updatedCourse.thumbnail}`;
-          
+
+        if (
+          updatedCourse.thumbnail &&
+          typeof updatedCourse.thumbnail === "string"
+        ) {
+          const thumbnailUrl = updatedCourse.thumbnail.startsWith("http")
+            ? updatedCourse.thumbnail
+            : `http://localhost:3000${updatedCourse.thumbnail.startsWith("/") ? updatedCourse.thumbnail : "/" + updatedCourse.thumbnail}`;
+
           setThumbnailPreview(thumbnailUrl);
         }
 
         // Clear the file input since we now have the saved URL
         setFormData((prev) => ({
           ...prev,
-          thumbnail: null
+          thumbnail: null,
         }));
 
         alert("Course updated successfully!");
@@ -264,7 +292,9 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
       }
     } catch (error) {
       console.error("Error saving course:", error);
-      alert(`Failed to save course: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Failed to save course: ${error.response?.data?.message || error.message}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -336,6 +366,13 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
                   Save Changes
                 </>
               )}
+            </button>
+            <button
+              onClick={() => navigate(`/createlecture/${selectCourses?._id}`)}
+              className="flex items-center gap-2 px-6 py-2 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <GoArrowDownLeft className="w-4 h-4" />
+              Go to Lectures Page
             </button>
           </div>
         </div>
@@ -508,10 +545,10 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
                         {level}
                       </option>
                     ))}
-                  </select>                
+                  </select>
                 </div>
 
-                 <div>
+                <div>
                   <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     Ratings
                   </label>

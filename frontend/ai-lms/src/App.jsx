@@ -15,6 +15,9 @@ import CreateCoursePage from "./pages/Educator/CreateCourses";
 
 import { setUserData, clearUserData } from "./redux/userSlice";
 import EditCourses from "./pages/Educator/EditCourses";
+import CreateLecture from "./pages/Educator/createLecture";
+import EditLecture from "./pages/Educator/EditLecture";
+import ViewCourses from "./pages/ViewCourses";
 
 function App() {
   const dispatch = useDispatch();
@@ -90,7 +93,6 @@ function App() {
           }
         />
 
-
         <Route
           path="/editCourse/:id"
           element={
@@ -102,12 +104,44 @@ function App() {
           }
         />
 
-
         <Route
           path="/create"
           element={
             isAuthenticated && userData?.role === "educator" ? (
               <CreateCoursePage />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
+          path="/createlecture/:courseId"
+          element={
+            userData?.role === "educator" ? (
+              <CreateLecture />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
+          path="/editlecture/:courseId/:lectureId"
+          element={
+            userData?.role === "educator" ? (
+              <EditLecture />
+            ) : (
+              <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
+          path="/viewCourses/:courseId"
+          element={
+            userData?.role === "educator" ? (
+              <ViewCourses />
             ) : (
               <Navigate to="/signup" />
             )

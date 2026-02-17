@@ -43,11 +43,14 @@ const CardPage = () => {
               Courses
             </span>
           </h1>
-          
+
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Discover world-class learning experiences designed to transform your career
-            <span className="block mt-2 text-gray-500">Join thousands of students already learning</span>
+            Discover world-class learning experiences designed to transform your
+            career
+            <span className="block mt-2 text-gray-500">
+              Join thousands of students already learning
+            </span>
           </p>
 
           {/* Stats Bar */}
@@ -57,14 +60,18 @@ const CardPage = () => {
                 <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                   {popularCourses.length}+
                 </div>
-                <div className="text-sm text-gray-600 mt-1">Featured Courses</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Featured Courses
+                </div>
               </div>
               <div className="w-px bg-gray-200"></div>
               <div className="text-center">
                 <div className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                   50K+
                 </div>
-                <div className="text-sm text-gray-600 mt-1">Active Students</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Active Students
+                </div>
               </div>
               <div className="w-px bg-gray-200"></div>
               <div className="text-center">
@@ -89,8 +96,12 @@ const CardPage = () => {
               <div className="absolute inset-0 w-20 h-20 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-full blur-xl"></div>
             </div>
             <div className="mt-8 text-center">
-              <p className="text-lg font-semibold text-gray-700">Loading Amazing Courses</p>
-              <p className="text-sm text-gray-500 mt-2">Please wait a moment...</p>
+              <p className="text-lg font-semibold text-gray-700">
+                Loading Amazing Courses
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Please wait a moment...
+              </p>
             </div>
           </div>
         )}
@@ -100,21 +111,27 @@ const CardPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {popularCourses.map((course, index) => (
               <div
-                key={course._id}
+                key={course._id} // ✅ use unique id
                 className="transform transition-all duration-500"
                 style={{
-                  animation: `fadeInUp 0.6s ease-out ${index * 0.15}s both`
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.15}s both`,
                 }}
               >
-                <Card 
+                <Card
+                  id={course._id} // ✅ pass it to Card as prop
                   title={course.title}
-                  description={course.description || course.subTitle}
+                  description={course.description || course.subtitle}
                   thumbnail={course.thumbnail}
                   instructor={course.instructor || course.creator}
                   duration={course.duration}
                   level={course.level}
                   price={course.price}
-                  rating={course.rating || (course.reviews?.length > 0 ? calculateAverageRating(course.reviews) : null)}
+                  ratings={
+                    course.ratings ??
+                    (course.reviews?.length > 0
+                      ? calculateAverageRating(course.reviews)
+                      : null)
+                  }
                   students={course.enrolledStudents?.length || 0}
                   category={course.category}
                 />
@@ -150,7 +167,8 @@ const CardPage = () => {
               No Courses Available Yet
             </h3>
             <p className="text-lg text-gray-600 max-w-md mx-auto mb-8">
-              We're working hard to bring you amazing learning content. Check back soon!
+              We're working hard to bring you amazing learning content. Check
+              back soon!
             </p>
             <button className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105">
               Notify Me When Available
@@ -167,7 +185,7 @@ const CardPage = () => {
               <div className="h-1.5 w-1.5 bg-cyan-500 rounded-full"></div>
               <div className="h-1 w-16 bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"></div>
             </div>
-            
+
             {/* CTA Section */}
             <div className="text-center space-y-4 mt-8">
               <h3 className="text-2xl font-bold text-gray-800">
@@ -204,7 +222,7 @@ const CardPage = () => {
 // Helper function to calculate average rating from reviews
 const calculateAverageRating = (reviews) => {
   if (!reviews || reviews.length === 0) return null;
-  const sum = reviews.reduce((acc, review) => acc + (review.rating || 0), 0);
+  const sum = reviews.reduce((acc, review) => acc + (review.ratings || 0), 0);
   return (sum / reviews.length).toFixed(1);
 };
 
