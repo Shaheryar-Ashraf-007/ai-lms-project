@@ -1,64 +1,72 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const CourseSchema = new mongoose.Schema({
+const CourseSchema = new mongoose.Schema(
+  {
     title: {
-        type: String,
-        required: true, 
+      type: String,
+      required: true,
     },
-    subTitle:{
-        type: String,
+    subTitle: {
+      type: String,
     },
     description: {
-        type: String,
+      type: String,
     },
 
-    category:{
-        type: String,
-        required: true,
+    category: {
+      type: String,
+      required: true,
     },
 
-    level:{
-        type: String,
-        enum: ["Beginner", "Intermediate", "Advanced"],
-        default: "Beginner"
+    level: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+      default: "Beginner",
     },
-    price:{
-        type: Number,
+    price: {
+      type: Number,
     },
 
-    ratings:{
-        type: Number,
-        default: 0,
+    ratings: {
+      type: Number,
+      default: 0,
     },
-    thumbnail:{
-        type: String,
+    thumbnail: {
+      type: String,
     },
-    enrolledStudents:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    }],
-
-    lectures:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Lecture"
-    }],
-
-    creator: {
+    enrolledStudents: [
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-    },
+      },
+    ],
 
-    isPublished:{
-        type: Boolean,
-        default: false
-    },
-
-    reviews:[{
+    lectures: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Review"
-    }]
+        ref: "Lecture",
+      },
+    ],
 
-}, {Timestamp:true});
+    creator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
+  },
+  { Timestamp: true },
+);
 const Course = mongoose.model("Course", CourseSchema);
 
 export default Course;
