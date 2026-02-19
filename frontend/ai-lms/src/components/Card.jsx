@@ -17,7 +17,7 @@ const Card = ({
   onEnroll,  
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [imgError, setImgError] = useState(false); // ← replaces imperative DOM fallback
+  const [imgError, setImgError] = useState(false);
 
   const navigate = useNavigate();
 

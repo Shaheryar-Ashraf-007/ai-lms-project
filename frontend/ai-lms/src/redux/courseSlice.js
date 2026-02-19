@@ -32,9 +32,10 @@ const loadCourseData = () => {
 };
 
 const initialState = {
-  courseData: loadCourseData(), // starts with cached courses
+  courseData: loadCourseData(),
   loading: false,
   error: null,
+  selectedCourse: null,
 };
 
 const courseSlice = createSlice({
@@ -58,10 +59,14 @@ const courseSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
+
+    setSelectedCourse: (state, action) => {
+      state.selectedCourse = action.payload;
+    }
   },
 });
 
-export const { setCourseData, setCourseLoading, setCourseError } =
+export const { setCourseData, setSelectedCourse, setCourseLoading, setCourseError } =
   courseSlice.actions;
 
 export default courseSlice.reducer;
