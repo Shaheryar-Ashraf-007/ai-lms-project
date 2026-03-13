@@ -1,6 +1,7 @@
 import Course from "../models/CourseModel.js";
 import Lecture from "../models/LectureModel.js";
 import uploadCloudinary from "../config/cloudinary.js";
+import User from "../models/User.js";
 
 export const createCourse = async (req, res) => {
   try {
@@ -43,16 +44,12 @@ export const createCourse = async (req, res) => {
 export const getPublishedCourses = async (req, res) => {
   try {
     const courses = await Course.find({ isPublished: true }).populate("lectures");
-    if (!courses || courses.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No published courses found",
-      });
-    }
+
     return res.status(200).json({
       success: true,
-      courses,
+      courses: courses || [],
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -61,7 +58,6 @@ export const getPublishedCourses = async (req, res) => {
     });
   }
 };
-
 export const getcreatorCourses = async (req, res) => {
   try {
     const courses = await Course.find({ creator: req.user._id });
@@ -355,3 +351,27 @@ export const deleteLecture = async (req, res) => {
 
   }
 };
+
+export const getCreatorById =async(req,res)=>{
+  try {
+    const {userId} = req.body
+
+    const response = await User.findById(userId).select("-password");
+    if(!response){
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      user: response,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user",
+      error: error.message,
+    });
+  }
+}

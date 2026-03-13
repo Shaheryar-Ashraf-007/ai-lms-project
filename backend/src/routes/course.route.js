@@ -8,6 +8,7 @@ import {
   editLecture,
   getCoursebyId,
   getCourseLectures,
+  getCreatorById,
   getcreatorCourses,
   getPublishedCourses,
 } from "../controllers/course.Controller.js";
@@ -50,5 +51,7 @@ courseRouter.post(
   },
   editLecture,
 );
+
+courseRouter.post("/creator", protectRoutes, getCreatorById)
 
 export default courseRouter;

@@ -15,19 +15,17 @@ export async function Signup(req, res) {
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
     }
 
     const existingUser = await User.findOne({ email });
+
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "User already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -48,19 +46,22 @@ export async function Signup(req, res) {
     );
 
     res.cookie("token", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       sameSite: "Lax",
       secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(201).json({
       success: true,
+      token, // ✅ important
       user: { ...newUser._doc, password: undefined },
     });
   } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 }
 
