@@ -108,7 +108,7 @@ const Login = () => {
 
   // Check both Redux state AND localStorage token
   const token = localStorage.getItem("token");
-  if (userData && token) {
+  if (token) {
     return <Navigate to="/" />;
   }
 

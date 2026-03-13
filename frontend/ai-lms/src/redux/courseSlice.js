@@ -1,27 +1,34 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../lib/axiosInstance";
 
-// Async thunk alternative (manual dispatch)
 export const fetchCourses = () => async (dispatch) => {
   try {
     dispatch(setCourseLoading(true));
 
-    const res = await axiosInstance.get("/course/getCourses/published"); // backend endpoint
-    console.log("Courses API Response:", res.data); // debug
+    const res = await axiosInstance.get("/course/getCourses/published");
 
-    // If backend returns { success: true, courses: [...] }
-    if (res.data.success && Array.isArray(res.data.courses)) {
+    console.log("Courses API Response:", res.data);
+
+    // Case 1: backend returns {success:true, courses:[]}
+    if (res.data?.courses) {
       dispatch(setCourseData(res.data.courses));
-    } else {
+    }
+
+    // Case 2: backend returns array directly
+    else if (Array.isArray(res.data)) {
+      dispatch(setCourseData(res.data));
+    }
+
+    else {
       dispatch(setCourseError("No courses found"));
     }
+
   } catch (error) {
     console.error("Fetch courses error:", error);
-    dispatch(setCourseError(error.message || "Failed to fetch courses"));
+    dispatch(setCourseError(error.response?.data?.message || "Failed to fetch courses"));
   }
 };
 
-// Load courses from localStorage (optional fallback)
 const loadCourseData = () => {
   try {
     const data = localStorage.getItem("courseData");
@@ -47,7 +54,6 @@ const courseSlice = createSlice({
       state.loading = false;
       state.error = null;
 
-      // Optional: cache courses locally
       localStorage.setItem("courseData", JSON.stringify(action.payload));
     },
 
@@ -62,11 +68,15 @@ const courseSlice = createSlice({
 
     setSelectedCourse: (state, action) => {
       state.selectedCourse = action.payload;
-    }
+    },
   },
 });
 
-export const { setCourseData, setSelectedCourse, setCourseLoading, setCourseError } =
-  courseSlice.actions;
+export const {
+  setCourseData,
+  setSelectedCourse,
+  setCourseLoading,
+  setCourseError,
+} = courseSlice.actions;
 
 export default courseSlice.reducer;

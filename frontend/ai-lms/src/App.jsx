@@ -12,38 +12,53 @@ import ForgetPassword from "./pages/ForgetPassword";
 import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
 import CreateCoursePage from "./pages/Educator/CreateCourses";
-
-import { setUserData, clearUserData } from "./redux/userSlice";
 import EditCourses from "./pages/Educator/EditCourses";
 import CreateLecture from "./pages/Educator/createLecture";
 import EditLecture from "./pages/Educator/EditLecture";
 import ViewCourses from "./pages/ViewCourses";
 
+import { setUserData, clearUserData } from "./redux/userSlice";
+
 function App() {
   const dispatch = useDispatch();
   const { userData, isAuthenticated } = useSelector((state) => state.user);
 
-  // ✅ Restore user on app load
+  // Restore user and token from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
     const token = localStorage.getItem("token");
 
     if (storedUser && token) {
-      dispatch(setUserData(JSON.parse(storedUser)));
+      try {
+        dispatch(setUserData(JSON.parse(storedUser)));
+      } catch (err) {
+        console.error("Failed to parse userData:", err);
+        dispatch(clearUserData());
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
+      }
     } else {
       dispatch(clearUserData());
     }
   }, [dispatch]);
 
+  // Protect routes: only logged in users can access
+  const ProtectedRoute = ({ children }) =>
+    isAuthenticated ? children : <Navigate to="/login" />;
+
+  // Educator route protection
+  const EducatorRoute = ({ children }) =>
+    isAuthenticated && userData?.role === "educator" ? children : <Navigate to="/" />;
+
   return (
     <>
       <ToastContainer />
       <Routes>
-        {/* Public */}
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/forget-password" element={<ForgetPassword />} />
 
-        {/* Auth Routes */}
+        {/* Auth routes */}
         <Route
           path="/signup"
           element={!isAuthenticated ? <Signup /> : <Navigate to="/" />}
@@ -53,98 +68,71 @@ function App() {
           element={!isAuthenticated ? <Login /> : <Navigate to="/" />}
         />
 
-        {/* Protected User Route */}
+        {/* Protected User route */}
         <Route
           path="/profile"
-          element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Educator Routes */}
+        {/* Educator routes */}
         <Route
           path="/dashboard"
           element={
-            isAuthenticated && userData?.role === "educator" ? (
+            <EducatorRoute>
               <Dashboard />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
         <Route
           path="/courses"
           element={
-            isAuthenticated && userData?.role === "educator" ? (
+            <EducatorRoute>
               <Courses />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
         <Route
           path="/create"
           element={
-            isAuthenticated && userData?.role === "educator" ? (
+            <EducatorRoute>
               <CreateCoursePage />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
         <Route
           path="/editCourse/:id"
           element={
-            isAuthenticated && userData?.role === "educator" ? (
+            <EducatorRoute>
               <EditCourses />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
-        <Route
-          path="/create"
-          element={
-            isAuthenticated && userData?.role === "educator" ? (
-              <CreateCoursePage />
-            ) : (
-              <Navigate to="/signup" />
-            )
-          }
-        />
-
         <Route
           path="/createlecture/:courseId"
           element={
-            userData?.role === "educator" ? (
+            <EducatorRoute>
               <CreateLecture />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
         <Route
           path="/editlecture/:courseId/:lectureId"
           element={
-            userData?.role === "educator" ? (
+            <EducatorRoute>
               <EditLecture />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
-
         <Route
           path="/viewCourses/:courseId"
           element={
-            userData?.role === "educator" ? (
+            <EducatorRoute>
               <ViewCourses />
-            ) : (
-              <Navigate to="/signup" />
-            )
+            </EducatorRoute>
           }
         />
       </Routes>

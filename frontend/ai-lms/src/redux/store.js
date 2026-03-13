@@ -3,9 +3,9 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-import userReducer from "./userSlice";
-import courseReducer from "./courseSlice";
-import lectureReducer from "./lectureSlice";
+import userReducer from "./userSlice.js";
+import courseReducer from "./courseSlice.js";
+import lectureReducer from "./lectureSlice.js";
 
 // Persist config
 const persistConfig = {
