@@ -20,7 +20,8 @@ import PaymentSuccess from "./pages/PaymentSuccess"; // ✅ new
 
 import { setUserData, clearUserData } from "./redux/userSlice";
 import ViewLecture from "./pages/ViewLecture";
-import MyEnrolledCourses from "./pages/MyEnrolledCourses";
+import SearchWithAI from "./pages/SearchWithAI";
+import AllCourses from "./pages/AllCourses";
 
 function App() {
   const dispatch = useDispatch();
@@ -161,14 +162,22 @@ function App() {
             </EducatorRoute>
           }
         />
+
         <Route
-          path="/myCourses"
+          path="/allCourses"
           element={
-            userData?.role === "student" ? (
-              <MyEnrolledCourses />
-            ) : (
-              <Navigate to="/Signup" />
-            )
+            <EducatorRoute>
+              <AllCourses />
+            </EducatorRoute>
+          }
+        />
+
+        <Route
+          path="/search"
+          element={
+            <EducatorRoute>
+              <SearchWithAI />
+            </EducatorRoute>
           }
         />
       </Routes>

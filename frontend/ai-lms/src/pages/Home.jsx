@@ -3,6 +3,7 @@ import { Search, BookOpen } from 'lucide-react'
 import Navbar from "../components/Navbar"
 import EnrollCourse from '../components/EnrollCourse';
 import CardPage from '../components/CardPage';
+import { useNavigate } from 'react-router-dom';
 
 
 const Home = () => {
@@ -22,6 +23,8 @@ const Home = () => {
       setLastScrollY(currentScrollY);
     }
   };
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
@@ -68,14 +71,14 @@ const Home = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-12">
+          <div onClick={()=>navigate("/allCourses")} className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-12">
             <button className="group relative w-full sm:w-auto bg-[#FBB03B] cursor-pointer text-white px-8 py-4 rounded-full font-bold text-base sm:text-lg hover:bg-[#e89f2f] transition-all duration-300 shadow-2xl hover:shadow-[#FBB03B]/50 hover:scale-105 flex items-center justify-center gap-3">
               <BookOpen className="w-5 h-5 " />
               View All Courses
               <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
             </button>
             
-            <button className="group relative w-full sm:w-auto cursor-pointer bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-full font-bold text-base sm:text-lg border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all duration-300 shadow-2xl hover:scale-105 flex items-center justify-center gap-3">
+            <button onClick={() => navigate('/search')} className="group relative w-full sm:w-auto cursor-pointer bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-full font-bold text-base sm:text-lg border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all duration-300 shadow-2xl hover:scale-105 flex items-center justify-center gap-3">
               <Search className="w-5 h-5" />
               Search with AI
               <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
