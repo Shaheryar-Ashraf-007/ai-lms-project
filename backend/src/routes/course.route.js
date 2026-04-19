@@ -15,6 +15,7 @@ import {
 import { protectRoutes } from "../middleware/isAuth.js";
 import uploads from "../middleware/multer.js";
 import upload from "../middleware/multer.js";
+import { searchController } from "../controllers/search.Controller.js";
 
 const courseRouter = express.Router();
 
@@ -53,5 +54,7 @@ courseRouter.post(
 );
 
 courseRouter.post("/creator", protectRoutes, getCreatorById)
+
+courseRouter.post("/searchWithAi", searchController)
 
 export default courseRouter;
