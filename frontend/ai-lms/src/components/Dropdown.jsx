@@ -22,9 +22,9 @@ const Dropdown = ({ onClose }) => {
             <span className='font-medium'>My Profile</span>
           </div>
 
-          <div className='flex items-center gap-3 hover:bg-gradient-to-r hover:from-[#FBB03B] hover:to-[#f5a732] p-3 rounded-lg cursor-pointer transition-all duration-200 group text-gray-700 hover:text-white'>
+          <div onClick={()=> navigate("/myCourses")} className='flex items-center gap-3 hover:bg-gradient-to-r hover:from-[#FBB03B] hover:to-[#f5a732] p-3 rounded-lg cursor-pointer transition-all duration-200 group text-gray-700 hover:text-white'>
             <BookOpen className='group-hover:text-white text-gray-600 transition-colors duration-200' size={20} />
-            <span className='font-medium'>My Courses</span>
+            <span className='font-medium' >My Courses</span>
           </div>
         </div>
       </div>

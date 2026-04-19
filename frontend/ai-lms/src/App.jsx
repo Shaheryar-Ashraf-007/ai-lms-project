@@ -16,8 +16,11 @@ import EditCourses from "./pages/Educator/EditCourses";
 import CreateLecture from "./pages/Educator/createLecture";
 import EditLecture from "./pages/Educator/EditLecture";
 import ViewCourses from "./pages/ViewCourses";
+import PaymentSuccess from "./pages/PaymentSuccess"; // ✅ new
 
 import { setUserData, clearUserData } from "./redux/userSlice";
+import ViewLecture from "./pages/ViewLecture";
+import MyEnrolledCourses from "./pages/MyEnrolledCourses";
 
 function App() {
   const dispatch = useDispatch();
@@ -48,7 +51,11 @@ function App() {
 
   // Educator route protection
   const EducatorRoute = ({ children }) =>
-    isAuthenticated && userData?.role === "educator" ? children : <Navigate to="/" />;
+    isAuthenticated && userData?.role === "educator" ? (
+      children
+    ) : (
+      <Navigate to="/" />
+    );
 
   return (
     <>
@@ -68,12 +75,22 @@ function App() {
           element={!isAuthenticated ? <Login /> : <Navigate to="/" />}
         />
 
-        {/* Protected User route */}
+        {/* Protected User routes */}
         <Route
           path="/profile"
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Payment success — protected so only logged-in users see it */}
+        <Route
+          path="/payment-success"
+          element={
+            <ProtectedRoute>
+              <PaymentSuccess />
             </ProtectedRoute>
           }
         />
@@ -133,6 +150,25 @@ function App() {
             <EducatorRoute>
               <ViewCourses />
             </EducatorRoute>
+          }
+        />
+
+        <Route
+          path="/viewLectures/:courseId"
+          element={
+            <EducatorRoute>
+              <ViewLecture />
+            </EducatorRoute>
+          }
+        />
+        <Route
+          path="/myCourses"
+          element={
+            userData?.role === "student" ? (
+              <MyEnrolledCourses />
+            ) : (
+              <Navigate to="/Signup" />
+            )
           }
         />
       </Routes>
