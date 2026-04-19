@@ -1,2 +1,7 @@
-public/uploads/
-*.mp4
+node_modules
+.env
+.env.*
+dist
+build
+coverage
+.DS_Store
