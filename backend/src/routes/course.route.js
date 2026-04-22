@@ -55,6 +55,6 @@ courseRouter.post(
 
 courseRouter.post("/creator", protectRoutes, getCreatorById)
 
-courseRouter.post("/searchWithAi", searchController)
+courseRouter.post("/search", searchController)
 
 export default courseRouter;
