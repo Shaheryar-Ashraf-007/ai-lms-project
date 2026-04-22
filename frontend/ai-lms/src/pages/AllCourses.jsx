@@ -29,18 +29,13 @@ const SkeletonCard = () => (
 );
 
 // ── Course card ────────────────────────────────────────────────
-const CourseCard = ({ course, aiMatch, navigate }) => {
+const CourseCard = ({ course, navigate }) => {
   const thumb = getThumbnail(course.thumbnail);
   const [imgError, setImgError] = useState(false);
 
-
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer ${
-        aiMatch
-          ? "border-blue-400 ring-2 ring-blue-100"
-          : "border-gray-100"
-      }`}
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer"
       onClick={() => navigate(`/viewCourses/${course._id}`)}
     >
       {/* Thumbnail */}
@@ -50,7 +45,10 @@ const CourseCard = ({ course, aiMatch, navigate }) => {
             src={thumb}
             alt={course.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={() => setImgError(true)}
+            onError={(e) => {
+              e.target.style.display = "none";
+              setImgError(true);
+            }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -58,13 +56,6 @@ const CourseCard = ({ course, aiMatch, navigate }) => {
             <span className="text-xs text-blue-400 font-medium">
               {course.category || "Course"}
             </span>
-          </div>
-        )}
-
-        {/* AI match badge */}
-        {aiMatch && (
-          <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-            <span>✦</span> AI Match
           </div>
         )}
 
@@ -141,29 +132,22 @@ const AllCourses = () => {
   const inputRef = useRef(null);
 
   const [courses, setCourses] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [aiMatchIds, setAiMatchIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [aiActive, setAiActive] = useState(false);
-  const [aiSummary, setAiSummary] = useState("");
   const [error, setError] = useState("");
-
 
   // ── Fetch all published courses ──────────────────────────────
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/course/published");
-        // Handle both { courses: [] } and plain array responses
+        const res = await axiosInstance.get("/course/getCourses/published");
         const data = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.courses)
           ? res.data.courses
           : [];
         setCourses(data);
-        setFiltered(data);
       } catch (err) {
         console.error("Failed to fetch courses:", err);
         setError("Failed to load courses. Please try again.");
@@ -174,21 +158,15 @@ const AllCourses = () => {
     fetchCourses();
   }, []);
 
-  // ── AI Search ────────────────────────────────────────────────
-  
-
-  // ── Clear search ─────────────────────────────────────────────
-  const handleClear = () => {
-    setQuery("");
-    setAiActive(false);
-    setAiMatchIds([]);
-    setAiSummary("");
-    setFiltered(courses);
-    setError("");
-    inputRef.current?.focus();
+  // ── Navigate to /search with query ──────────────────────────
+  const handleAiSearch = () => {
+    if (!query.trim()) return;
+    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
- 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleAiSearch();
+  };
 
   const suggestions = [
     "Beginner Python",
@@ -224,8 +202,8 @@ const AllCourses = () => {
             matching courses for you instantly
           </p>
 
-          {/* Search bar */}
-          <div className="flex items-center gap-2 bg-white rounded-2xl p-2 shadow-2xl shadow-blue-900/40" onClick={()=> navigate("/search")}>
+          {/* ── Search bar ── */}
+          <div className="flex items-center gap-2 bg-white rounded-2xl p-2 shadow-2xl shadow-blue-900/40">
             <div className="flex-1 flex items-center gap-3 px-3 min-w-0">
               <span className="text-blue-400 text-lg flex-shrink-0">🔍</span>
               <input
@@ -233,104 +211,51 @@ const AllCourses = () => {
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder='e.g. "I want to learn web development from scratch"'
                 className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent py-2 font-medium min-w-0"
               />
               {query && (
                 <button
-                  onClick={handleClear}
+                  onClick={() => setQuery("")}
                   className="text-gray-400 hover:text-gray-600 text-lg flex-shrink-0 transition-colors leading-none"
                 >
                   ✕
                 </button>
               )}
             </div>
+
+            {/* ✅ Search with AI button — navigates to /search */}
             <button
+              onClick={handleAiSearch}
+              disabled={!query.trim()}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm px-5 py-3 rounded-xl transition-all shadow-md shadow-blue-300 flex-shrink-0 whitespace-nowrap"
             >
-              {/* {aiLoading ? (
-                <>
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12" cy="12" r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8z"
-                    />
-                  </svg>
-                  Searching…
-                </>
-              ) : (
-                <>
-                  <span>✦</span>
-                  Search with AI
-                </>
-              )} */}
+              <span>✦</span>
+              Search with AI
             </button>
           </div>
 
           {/* Suggestion chips */}
-          {!aiActive && (
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {suggestions.map(s => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    setQuery(s);
-                    setTimeout(() => {
-                      inputRef.current?.focus();
-                    }, 50);
-                  }}
-                  className="text-xs text-blue-100 border border-white/20 bg-white/10 hover:bg-white/20 rounded-full px-3 py-1.5 transition-all font-medium"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap justify-center gap-2 mt-4">
+            {suggestions.map(s => (
+              <button
+                key={s}
+                onClick={() => {
+                  setQuery(s);
+                  setTimeout(() => inputRef.current?.focus(), 50);
+                }}
+                className="text-xs text-blue-100 border border-white/20 bg-white/10 hover:bg-white/20 rounded-full px-3 py-1.5 transition-all font-medium"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* ── CONTENT AREA ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 pb-16">
-
-        {/* AI result summary card */}
-        {aiActive && aiSummary && (
-          <div className="bg-white border border-blue-200 rounded-2xl p-4 mb-6 flex items-start gap-3 shadow-md shadow-blue-50">
-            <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-600 text-base font-bold">✦</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-0.5">
-                AI Result
-              </p>
-              <p className="text-sm text-gray-700 font-medium leading-relaxed">
-                {aiSummary}
-              </p>
-              {aiMatchIds.length > 0 && (
-                <p className="text-xs text-gray-400 mt-1">
-                  {aiMatchIds.length} course{aiMatchIds.length !== 1 ? "s" : ""}{" "}
-                  matched · remaining courses shown below
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleClear}
-              className="text-xs font-bold text-gray-400 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-1.5 transition-all flex-shrink-0"
-            >
-              Clear
-            </button>
-          </div>
-        )}
 
         {/* Error banner */}
         {error && (
@@ -348,23 +273,13 @@ const AllCourses = () => {
         {/* Results header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">
-              {aiActive ? "Search Results" : "All Courses"}
-            </h2>
+            <h2 className="text-lg font-bold text-gray-800">All Courses</h2>
             <p className="text-sm text-gray-400 mt-0.5">
               {loading
                 ? "Loading courses…"
-                : `${filtered.length} course${filtered.length !== 1 ? "s" : ""} available`}
+                : `${courses.length} course${courses.length !== 1 ? "s" : ""} available`}
             </p>
           </div>
-          {aiActive && (
-            <button
-              onClick={handleClear}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-xl px-4 py-2 transition-all"
-            >
-              Show All
-            </button>
-          )}
         </div>
 
         {/* Grid */}
@@ -374,27 +289,20 @@ const AllCourses = () => {
               <SkeletonCard key={i} />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : courses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-            <span className="text-6xl">🔍</span>
-            <h3 className="text-xl font-bold text-gray-700">No courses found</h3>
+            <span className="text-6xl">📭</span>
+            <h3 className="text-xl font-bold text-gray-700">No courses yet</h3>
             <p className="text-gray-400 text-sm max-w-xs">
-              Try a different search or browse all available courses.
+              Check back soon — new courses are being added regularly.
             </p>
-            <button
-              onClick={handleClear}
-              className="mt-2 bg-blue-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
-            >
-              Browse All Courses
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map(course => (
+            {courses.map(course => (
               <CourseCard
                 key={course._id}
                 course={course}
-                aiMatch={aiMatchIds.includes(course._id)}
                 navigate={navigate}
               />
             ))}
