@@ -21,7 +21,7 @@ app.use(express.json({ limit: "700mb" }));
 app.use(express.urlencoded({ limit: "700mb", extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://localhost:5173",
+  origin: process.env.FRONTEND_URL,
   credentials: true, // Allow credentials (cookies) to be sent
 }));
 
