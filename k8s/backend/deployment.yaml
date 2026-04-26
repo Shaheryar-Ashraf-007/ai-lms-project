@@ -27,7 +27,6 @@ spec:
       containers:
         - name: backend
 
-          # ✅ IMPORTANT: replace latest with your real build tag
           image: 090565618799.dkr.ecr.us-east-1.amazonaws.com/lms-backend:d0f0f54
 
           imagePullPolicy: IfNotPresent
@@ -47,9 +46,56 @@ spec:
             - name: PORT
               value: "5000"
 
-            # ✅ Stripe secret injected correctly
+            - name: MONGODB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MONGODB_URL
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+
+            - name: USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: USER_EMAIL
+
+            - name: USER_EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: USER_EMAIL_PASSWORD
+
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: CLOUDINARY_CLOUD_NAME
+
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: CLOUDINARY_API_KEY
+
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: CLOUDINARY_API_SECRET
+
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: STRIPE_API_KEY
+
             - name: STRIPE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: stripe-secret
+                  name: app-secrets
                   key: STRIPE_SECRET_KEY
