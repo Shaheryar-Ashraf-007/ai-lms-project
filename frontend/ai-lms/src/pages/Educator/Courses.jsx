@@ -42,9 +42,11 @@ const CoursesPage = () => {
       setLoading(true);
       setError(null);
 
-      const response = await axiosInstance.get("/course/creator", {
+      const response = await axiosInstance.get("/course/getCourses", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("All Courses:", response.data); 
 
       const coursesData = Array.isArray(response.data)
         ? response.data
@@ -76,7 +78,7 @@ const CoursesPage = () => {
     if (!thumbnail) return PLACEHOLDER_THUMBNAIL;
     if (thumbnail.startsWith("http")) return thumbnail;
 
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = import.meta.env.VITE_API_URL || ""; // ← set this in .env.local
     const path = thumbnail.startsWith("/") ? thumbnail : `/${thumbnail}`;
     return `${baseUrl}${path}`;
   };

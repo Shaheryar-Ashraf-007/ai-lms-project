@@ -119,7 +119,7 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
         if (course.thumbnail && typeof course.thumbnail === "string") {
           const thumbnailUrl = course.thumbnail.startsWith("http")
             ? course.thumbnail
-            : `http://localhost:3000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`;
+            : `${import.meta.env.VITE_API_URL}${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`;
 
           setThumbnailPreview(thumbnailUrl);
         }
@@ -275,7 +275,7 @@ const EditCoursePage = ({ courseId: propCourseId }) => {
         ) {
           const thumbnailUrl = updatedCourse.thumbnail.startsWith("http")
             ? updatedCourse.thumbnail
-            : `http://localhost:3000${updatedCourse.thumbnail.startsWith("/") ? updatedCourse.thumbnail : "/" + updatedCourse.thumbnail}`;
+            : `${import.meta.env.VITE_API_URL}${updatedCourse.thumbnail.startsWith("/") ? updatedCourse.thumbnail : "/" + updatedCourse.thumbnail}`;
 
           setThumbnailPreview(thumbnailUrl);
         }
