@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd frontend/ai-lms
+        - npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: frontend/ai-lms/build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - frontend/ai-lms/node_modules/**/*
