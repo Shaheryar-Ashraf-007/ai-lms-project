@@ -1,0 +1,3 @@
+aws-infra/.terraform/
+aws-infra/*.tfstate
+aws-infra/*.tfstate.backup
