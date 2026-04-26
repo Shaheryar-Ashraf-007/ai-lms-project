@@ -375,3 +375,6 @@ export const getCreatorById =async(req,res)=>{
     });
   }
 }
+
+
+// controlller 
