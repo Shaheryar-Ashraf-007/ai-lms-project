@@ -377,4 +377,22 @@ export const getCreatorById =async(req,res)=>{
 }
 
 
+export const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({}).populate("lectures");
+
+    return res.status(200).json({
+      success: true,
+      courses,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch all courses",
+      error: error.message,
+    });
+  }
+};
+
+
 // controlller 

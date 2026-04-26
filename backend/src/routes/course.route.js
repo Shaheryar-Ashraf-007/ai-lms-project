@@ -6,6 +6,7 @@ import {
   deleteLecture,
   editCourse,
   editLecture,
+  getAllCourses,
   getCoursebyId,
   getCourseLectures,
   getCreatorById,
@@ -29,6 +30,7 @@ courseRouter.post(
   editCourse,
 );
 courseRouter.get("/getCourses/:courseId", protectRoutes, getCoursebyId);
+courseRouter.get("/getCourses", getAllCourses);
 courseRouter.delete("/remove/:courseId", protectRoutes, deleteCourse);
 
 // Lecture Routes
