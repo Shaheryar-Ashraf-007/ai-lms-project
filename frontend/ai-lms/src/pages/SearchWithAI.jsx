@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axiosInstance from '../../lib/axiosInstance'
 
-const BACKEND_URL = 'http://localhost:3000'
+const BACKEND_URL = import.meta.env.VITE_API_URL || ""
 const GEMINI_KEY = import.meta.env.GEMINI_API_KEY
 
 const getThumbnail = (thumbnail) => {

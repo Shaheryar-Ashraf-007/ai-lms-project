@@ -1,12 +1,12 @@
-import axios from "axios";
 import { setUserData } from "../redux/userSlice";
+import axiosInstance from "../../lib/axiosInstance";
 
 const GetCurrentUser = async (dispatch) => {
   try {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const res = await axios.get("/api/current-user", {
+    const res = await axiosInstance.get("/api/current-user", {
       headers: { Authorization: `Bearer ${token}` },
     });
 

@@ -42,7 +42,7 @@ const isEnrolled = selectedCourse?.enrolledStudents?.some(
   (id) => id === userData?._id || id?.toString() === userData?._id?.toString()
 );
 
-  const BACKEND_URL = "http://localhost:3000";
+  const BACKEND_URL = import.meta.env.VITE_API_URL || ""; // ← set this in .env.local
 
   useEffect(() => {
     const handleCreator = async () => {

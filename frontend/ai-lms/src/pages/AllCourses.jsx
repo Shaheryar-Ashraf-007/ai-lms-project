@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../lib/axiosInstance";
 
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = import.meta.env.VITE_API_URL || ""; // ← set this in .env.local
 
 // ── Thumbnail URL builder ──────────────────────────────────────
 const getThumbnail = (thumbnail) => {

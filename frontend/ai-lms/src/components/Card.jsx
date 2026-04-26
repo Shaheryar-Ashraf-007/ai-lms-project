@@ -22,7 +22,7 @@ const Card = ({
   const navigate = useNavigate();
 
   // ─── Backend base URL ──────────────────────────────────────────────────────
-  const BACKEND_URL = "http://localhost:3000";
+  const BACKEND_URL = import.meta.env.VITE_API_URL || ""; // ← set this in .env.local
   const imageUrl = thumbnail ? `${BACKEND_URL}${thumbnail}` : null;
   const showImage = imageUrl && !imgError;
 
