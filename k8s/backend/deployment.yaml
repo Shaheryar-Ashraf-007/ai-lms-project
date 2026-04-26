@@ -4,19 +4,34 @@ metadata:
   name: backend-api
   labels:
     app: backend-api
+
 spec:
   replicas: 2
+
   selector:
     matchLabels:
       app: backend-api
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
   template:
     metadata:
       labels:
         app: backend-api
+
     spec:
       containers:
         - name: backend
-          image: 090565618799.dkr.ecr.us-east-1.amazonaws.com/lms-backend:latest
+
+          # ✅ IMPORTANT: replace latest with your real build tag
+          image: 090565618799.dkr.ecr.us-east-1.amazonaws.com/lms-backend:d0f0f54
+
+          imagePullPolicy: IfNotPresent
+
           ports:
             - containerPort: 5000
 
@@ -31,3 +46,10 @@ spec:
           env:
             - name: PORT
               value: "5000"
+
+            # ✅ Stripe secret injected correctly
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-secret
+                  key: STRIPE_SECRET_KEY
