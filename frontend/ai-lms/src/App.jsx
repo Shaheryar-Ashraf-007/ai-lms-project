@@ -13,7 +13,7 @@ import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
 import CreateCoursePage from "./pages/Educator/CreateCourses";
 import EditCourses from "./pages/Educator/EditCourses";
-import CreateLecture from "./pages/Educator/createLecture";
+import CreateLecture from "./pages/Educator/CreateLecture";
 import EditLecture from "./pages/Educator/EditLecture";
 import ViewCourses from "./pages/ViewCourses";
 import PaymentSuccess from "./pages/PaymentSuccess"; // ✅ new
