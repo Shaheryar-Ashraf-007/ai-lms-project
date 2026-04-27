@@ -57,3 +57,38 @@ jobs:
 
           kubectl set image deployment/backend-api backend=$IMAGE
           kubectl rollout status deployment/backend-api
+
+      # 8. Send Success Email
+      
+      - name: Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚀 LMS Backend Deployed Successfully"
+          to: ${{ secrets.TO_EMAIL }}
+          from: GitHub Actions
+          body: |
+            Deployment to EKS completed successfully ✅
+            Commit: ${{ github.sha }}
+            Cluster: ${{ env.EKS_CLUSTER_NAME }}
+
+      # 9. Send Failure Email
+      - name: Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ LMS Backend Deployment Failed"
+          to: ${{ secrets.TO_EMAIL }}
+          from: GitHub Actions
+          body: |
+            Deployment FAILED ❌
+            Commit: ${{ github.sha }}
+            Check GitHub Actions logs for details.
